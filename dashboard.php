@@ -9,12 +9,8 @@ if ($_SESSION['type'] =='admin') {
 	$ventas->reset();
 	$ventas->where('estado !=','2');
 }
-$ventas_list = $ventas->get();
-
-// Limitar a solo las últimas 5
-if (is_array($ventas_list) && count($ventas_list) > 5) {
-	$ventas_list = array_slice($ventas_list, 0, 5);
-}
+$ventas->order_by('id_venta','desc');
+$ventas_list = $ventas->get(5); // Limitar a 5 resultados
 
 ?>
 
