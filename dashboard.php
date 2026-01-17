@@ -1,55 +1,79 @@
 <?php
 include('inc/control.php');
-include('inc/sdba/sdba.php');
 
-// Obtener últimas 5 ventas
-$ventas = Sdba::table('ventas');
-if ($_SESSION['type'] == 'admin') {
-    $ventas->where('estado !=', '2');
-} else {
-    $ventas->where('usuario', $_SESSION['id_usr'])->and_where('estado !=', '2');
-}
-$ventas->order_by('id_venta', 'desc');
-$ventas->limit(5);
-$ventas_list = $ventas->get();
-
-// Calcular totales
+// Inicializar variables
+$ventas_list = [];
 $total_dia = 0;
 $total_mes = 0;
+$total_productos = 0;
+$total_clientes = 0;
 
-// Total de ventas del día
-$ventas_dia = Sdba::table('ventas');
-$ventas_dia->where('fecha', date('Y-m-d'))->and_where('estado !=', '2');
-if ($_SESSION['type'] != 'admin') {
-    $ventas_dia->and_where('usuario', $_SESSION['id_usr']);
-}
-$ventas_dia_list = $ventas_dia->get();
-foreach ($ventas_dia_list as $vd) {
-    $dv = Sdba::table('detalle_ventas');
-    $dv->where('venta', $vd['id_venta']);
-    $total_dia += $dv->sum('total');
-}
+try {
+    include('inc/sdba/sdba.php');
 
-// Total de ventas del mes
-$ventas_mes = Sdba::table('ventas');
-$ventas_mes->where('fecha >=', date('Y-m-01'))->and_where('estado !=', '2');
-if ($_SESSION['type'] != 'admin') {
-    $ventas_mes->and_where('usuario', $_SESSION['id_usr']);
-}
-$ventas_mes_list = $ventas_mes->get();
-foreach ($ventas_mes_list as $vm) {
-    $dv = Sdba::table('detalle_ventas');
-    $dv->where('venta', $vm['id_venta']);
-    $total_mes += $dv->sum('total');
-}
+    // Obtener últimas 5 ventas
+    $ventas = Sdba::table('ventas');
+    if ($_SESSION['type'] == 'admin') {
+        $ventas->where('estado !=', '2');
+    } else {
+        $ventas->where('usuario', $_SESSION['id_usr'])->and_where('estado !=', '2');
+    }
+    $ventas->order_by('id_venta', 'desc');
+    $ventas->limit(5);
+    $ventas_list = $ventas->get();
 
-// Total de productos
-$productos = Sdba::table('productos');
-$total_productos = $productos->total();
+    if (!is_array($ventas_list)) {
+        $ventas_list = [];
+    }
 
-// Total de clientes
-$clientes = Sdba::table('clientes');
-$total_clientes = $clientes->total();
+    // Total de ventas del día
+    $ventas_dia = Sdba::table('ventas');
+    $ventas_dia->where('fecha', date('Y-m-d'))->and_where('estado !=', '2');
+    if ($_SESSION['type'] != 'admin') {
+        $ventas_dia->and_where('usuario', $_SESSION['id_usr']);
+    }
+    $ventas_dia_list = $ventas_dia->get();
+
+    if (is_array($ventas_dia_list)) {
+        foreach ($ventas_dia_list as $vd) {
+            $dv = Sdba::table('detalle_ventas');
+            $dv->where('venta', $vd['id_venta']);
+            $sum = $dv->sum('total');
+            $total_dia += $sum ? $sum : 0;
+        }
+    }
+
+    // Total de ventas del mes
+    $ventas_mes = Sdba::table('ventas');
+    $ventas_mes->where('fecha >=', date('Y-m-01'))->and_where('estado !=', '2');
+    if ($_SESSION['type'] != 'admin') {
+        $ventas_mes->and_where('usuario', $_SESSION['id_usr']);
+    }
+    $ventas_mes_list = $ventas_mes->get();
+
+    if (is_array($ventas_mes_list)) {
+        foreach ($ventas_mes_list as $vm) {
+            $dv = Sdba::table('detalle_ventas');
+            $dv->where('venta', $vm['id_venta']);
+            $sum = $dv->sum('total');
+            $total_mes += $sum ? $sum : 0;
+        }
+    }
+
+    // Total de productos
+    $productos = Sdba::table('productos');
+    $total_productos = $productos->total();
+    if (!$total_productos) $total_productos = 0;
+
+    // Total de clientes
+    $clientes = Sdba::table('clientes');
+    $total_clientes = $clientes->total();
+    if (!$total_clientes) $total_clientes = 0;
+
+} catch (Exception $e) {
+    // Si hay error, mantener valores por defecto
+    error_log("Error en dashboard: " . $e->getMessage());
+}
 
 ?>
 
