@@ -12,6 +12,36 @@ if ($_SESSION['type'] =='admin') {
 $ventas->order_by('id_venta','desc');
 $ventas_list = $ventas->get(5); // Limitar a 5 resultados
 
+// Calcular ventas del día
+$ventas_dia = Sdba::table('ventas');
+$ventas_dia->where('fecha', date('Y-m-d'))->and_where('estado !=','2');
+$ventas_dia_list = $ventas_dia->get();
+$total_dia = 0;
+foreach ($ventas_dia_list as $venta) {
+	$dv = Sdba::table('detalle_ventas');
+	$dv->where('venta', $venta['id_venta']);
+	$total_dia += $dv->sum('total');
+}
+
+// Calcular ventas del mes
+$ventas_mes = Sdba::table('ventas');
+$ventas_mes->where('fecha >=', date('Y-m-01'), false, true)->and_where('estado !=','2');
+$ventas_mes_list = $ventas_mes->get();
+$total_mes = 0;
+foreach ($ventas_mes_list as $venta) {
+	$dv = Sdba::table('detalle_ventas');
+	$dv->where('venta', $venta['id_venta']);
+	$total_mes += $dv->sum('total');
+}
+
+// Contar productos
+$productos = Sdba::table('productos');
+$total_productos = $productos->total();
+
+// Contar clientes
+$clientes = Sdba::table('clientes');
+$total_clientes = $clientes->total();
+
 ?>
 
 
@@ -386,7 +416,7 @@ $ventas_list = $ventas->get(5); // Limitar a 5 resultados
                             <i class="fas fa-shopping-cart"></i>
                         </div>
                         <h6>Ventas del Día</h6>
-                        <h3>S/ 0.00</h3>
+                        <h3>S/ <?php echo number_format($total_dia, 2); ?></h3>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -395,7 +425,7 @@ $ventas_list = $ventas->get(5); // Limitar a 5 resultados
                             <i class="fas fa-box"></i>
                         </div>
                         <h6>Productos</h6>
-                        <h3>0</h3>
+                        <h3><?php echo $total_productos; ?></h3>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -404,7 +434,7 @@ $ventas_list = $ventas->get(5); // Limitar a 5 resultados
                             <i class="fas fa-user-tie"></i>
                         </div>
                         <h6>Clientes</h6>
-                        <h3>0</h3>
+                        <h3><?php echo $total_clientes; ?></h3>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -413,7 +443,7 @@ $ventas_list = $ventas->get(5); // Limitar a 5 resultados
                             <i class="fas fa-chart-bar"></i>
                         </div>
                         <h6>Ventas del Mes</h6>
-                        <h3>S/ 0.00</h3>
+                        <h3>S/ <?php echo number_format($total_mes, 2); ?></h3>
                     </div>
                 </div>
             </div>
