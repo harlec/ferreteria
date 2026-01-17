@@ -1,5 +1,55 @@
 <?php
 include('inc/control.php');
+include('inc/sdba/sdba.php');
+
+// Obtener últimas 5 ventas
+$ventas = Sdba::table('ventas');
+if ($_SESSION['type'] == 'admin') {
+    $ventas->where('estado !=', '2');
+} else {
+    $ventas->where('usuario', $_SESSION['id_usr'])->and_where('estado !=', '2');
+}
+$ventas->order_by('id_venta', 'desc');
+$ventas->limit(5);
+$ventas_list = $ventas->get();
+
+// Calcular totales
+$total_dia = 0;
+$total_mes = 0;
+
+// Total de ventas del día
+$ventas_dia = Sdba::table('ventas');
+$ventas_dia->where('fecha', date('Y-m-d'))->and_where('estado !=', '2');
+if ($_SESSION['type'] != 'admin') {
+    $ventas_dia->and_where('usuario', $_SESSION['id_usr']);
+}
+$ventas_dia_list = $ventas_dia->get();
+foreach ($ventas_dia_list as $vd) {
+    $dv = Sdba::table('detalle_ventas');
+    $dv->where('venta', $vd['id_venta']);
+    $total_dia += $dv->sum('total');
+}
+
+// Total de ventas del mes
+$ventas_mes = Sdba::table('ventas');
+$ventas_mes->where('fecha >=', date('Y-m-01'))->and_where('estado !=', '2');
+if ($_SESSION['type'] != 'admin') {
+    $ventas_mes->and_where('usuario', $_SESSION['id_usr']);
+}
+$ventas_mes_list = $ventas_mes->get();
+foreach ($ventas_mes_list as $vm) {
+    $dv = Sdba::table('detalle_ventas');
+    $dv->where('venta', $vm['id_venta']);
+    $total_mes += $dv->sum('total');
+}
+
+// Total de productos
+$productos = Sdba::table('productos');
+$total_productos = $productos->total();
+
+// Total de clientes
+$clientes = Sdba::table('clientes');
+$total_clientes = $clientes->total();
 
 ?>
 
@@ -277,6 +327,41 @@ include('inc/control.php');
                 display: none;
             }
         }
+
+        /* Modern Table Styles */
+        .modern-table thead {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .modern-table thead th {
+            color: white;
+            font-weight: 600;
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+        }
+
+        .modern-table tbody tr {
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .modern-table tbody tr:hover {
+            background: #f8f9fa;
+            transform: scale(1.01);
+        }
+
+        .modern-table tbody td {
+            padding: 12px 15px;
+            vertical-align: middle;
+        }
+
+        .modern-table tbody tr:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 
@@ -340,7 +425,7 @@ include('inc/control.php');
                             <i class="fas fa-shopping-cart"></i>
                         </div>
                         <h6>Ventas del Día</h6>
-                        <h3>S/ 0.00</h3>
+                        <h3>S/ <?php echo number_format($total_dia, 2); ?></h3>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -349,7 +434,7 @@ include('inc/control.php');
                             <i class="fas fa-box"></i>
                         </div>
                         <h6>Productos</h6>
-                        <h3>0</h3>
+                        <h3><?php echo $total_productos; ?></h3>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -358,7 +443,7 @@ include('inc/control.php');
                             <i class="fas fa-user-tie"></i>
                         </div>
                         <h6>Clientes</h6>
-                        <h3>0</h3>
+                        <h3><?php echo $total_clientes; ?></h3>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -367,7 +452,7 @@ include('inc/control.php');
                             <i class="fas fa-chart-bar"></i>
                         </div>
                         <h6>Ventas del Mes</h6>
-                        <h3>S/ 0.00</h3>
+                        <h3>S/ <?php echo number_format($total_mes, 2); ?></h3>
                     </div>
                 </div>
             </div>
@@ -375,22 +460,73 @@ include('inc/control.php');
             <div class="row g-4 mt-4">
                 <div class="col-md-12">
                     <div class="stat-card">
-                        <h5 class="mb-3"><i class="fas fa-receipt me-2"></i>Últimas Ventas</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>Últimas Ventas</h5>
+                            <a href="ventas.php" class="btn btn-sm btn-outline-primary">
+                                Ver todas <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="table table-hover modern-table">
                                 <thead>
                                     <tr>
-                                        <th>#</th>
-                                        <th>Cliente</th>
+                                        <th>ID Venta</th>
+                                        <th>Tipo</th>
+                                        <th>Forma de Pago</th>
                                         <th>Fecha</th>
                                         <th>Total</th>
                                         <th>Estado</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted">No hay ventas registradas</td>
-                                    </tr>
+                                    <?php
+                                    if (count($ventas_list) > 0) {
+                                        foreach ($ventas_list as $venta) {
+                                            // Calcular total de la venta
+                                            $dv = Sdba::table('detalle_ventas');
+                                            $dv->where('venta', $venta['id_venta']);
+                                            $total_venta = $dv->sum('total');
+
+                                            // Tipo de venta
+                                            $tipo = ($venta['tipo'] == '1') ? 'Contado' : 'Crédito';
+                                            $tipo_badge = ($venta['tipo'] == '1') ? 'success' : 'warning';
+
+                                            // Forma de pago
+                                            switch ($venta['forma']) {
+                                                case '1': $forma = 'Efectivo'; break;
+                                                case '2': $forma = 'Tar. Débito'; break;
+                                                case '3': $forma = 'Tar. Crédito'; break;
+                                                default: $forma = 'N/A';
+                                            }
+
+                                            // Estado
+                                            $estado = ($venta['estado'] == '1') ? 'Emitida' : 'Pendiente';
+                                            $estado_badge = ($venta['estado'] == '1') ? 'success' : 'warning';
+
+                                            echo '<tr>
+                                                <td><strong>V-' . $venta['id_venta'] . '</strong></td>
+                                                <td><span class="badge bg-' . $tipo_badge . '">' . $tipo . '</span></td>
+                                                <td><i class="fas fa-money-bill-wave text-success me-1"></i>' . $forma . '</td>
+                                                <td>' . date('d/m/Y', strtotime($venta['fecha'])) . '</td>
+                                                <td><strong>S/ ' . number_format($total_venta, 2) . '</strong></td>
+                                                <td><span class="badge bg-' . $estado_badge . '">' . $estado . '</span></td>
+                                                <td>
+                                                    <a href="ver_venta.php?id=' . $venta['id_venta'] . '" class="btn btn-sm btn-primary" title="Ver venta">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>';
+                                        }
+                                    } else {
+                                        echo '<tr>
+                                            <td colspan="7" class="text-center text-muted py-4">
+                                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                                No hay ventas registradas
+                                            </td>
+                                        </tr>';
+                                    }
+                                    ?>
                                 </tbody>
                             </table>
                         </div>
