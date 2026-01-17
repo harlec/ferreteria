@@ -4,29 +4,9 @@ if ($_SESSION['type']=='operador') {
 	header("Location: dashboard.php");
 }
 
-include('inc/sdba/sdba.php'); // include main file
-$ventas = Sdba::table('clientes'); // creating table object
-$ventas_list = $ventas->get(); 
-
-$datos = '';
-$i = 1;
-foreach ($ventas_list as $value) {
-
-	$vc = Sdba::table('ventas');
-	$vc->where('cliente',$value['id_cliente']);
-	$cantidad = $vc->total();
-
-	$datos .='<tr><td>'.$value['id_cliente'].'</td> 
-    			<td>'.$value['cliente'].'</td>
-    			<td>'.$cantidad.'</td>
-    			<td>'.$value['doc_identidad'].'</td> 
-    			<td>'.$value['telefono'].'</td> 
-    			<td>'.$value['email'].'</td> 
-    			<td><a href="editar_cliente.php?id='.$value['id_cliente'].'"><img src="assets/img/edit.png"></a><a href="ver_cliente.php?id='.$value['id_cliente'].'"><img src="assets/img/eye.png"></a></td> 
-    		  </tr>';
-    $i++;
-}
-
+include('inc/sdba/sdba.php');
+$clientes = Sdba::table('clientes');
+$clientes_list = $clientes->get();
 
 ?>
 
@@ -35,181 +15,571 @@ foreach ($ventas_list as $value) {
 <html lang="es">
 <head>
 	<meta charset="UTF-8">
-	<title>Sistema - Menu Principal</title>
+	<title>Sistema - Clientes</title>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="/assets/css/custom.css">
-    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.5.0/sweetalert2.min.css" integrity="sha512-YpZXdiMhuP3woCdvg0ou2UPj6l4KQUuf3gbMXTNMgtqTakMInX7h+64CTh+UIvYdA7ctBU2BAA/h4eEhoMEmsg==" crossorigin="anonymous" />
-    </head>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="/assets/css/sweetalert2.min.css">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --sidebar-collapsed-width: 80px;
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --dark-bg: #1a1d29;
+            --darker-bg: #13151f;
+            --text-light: #e0e0e0;
+        }
 
-<body class="mobile dashboard">
-	<div class="">
-		<nav class="navbar navbar-inverse navbar-fixed-top">
-	      <div class="">
-	        <div class="navbar-header">
-	          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-	            <span class="sr-only">Toggle navigation</span>
-	            <span class="icon-bar"></span>
-	            <span class="icon-bar"></span>
-	            <span class="icon-bar"></span>
-	          </button>
-	          <a class="navbar-brand" href="#"><img class="img-responsive logo" src="/assets/img/harlec-sistema.png"></a>
-	        </div>
-	        <?php menu('7'); ?>
-	      </div>
-	      <div class="submenu">
-	      	<ul class="subtop-tabs">
-	      		<li >
-	      			<a class="" href="agregar_cliente.php">Registrar Cliente</a>
-	      		</li>
-	      		<li class="active">
-	      			<a class="" href="ver_clientes.php">Listar Clientes</a>
-	      		</li>
-	      	</ul>
-	      </div>
-	    </nav>
-		<div class="kbg">
-			<div class="cuerpofull">
-				<div class="titulo">
-					<h3>Listar Clientes</h3>
-				</div>
-				<div class="container-fluid">
-					<div class="row">
-						<div class="col-md-12">
-							<div class="kdashboard">
-								<div class="row">
-									<div class="col-md-12">
-										<div class="panel panel-default pa">
-											<div class="panel-body">
-											    <table id="datos" class="table table-hover"> 
-											    	<thead> 
-											    		<tr>  
-											    			<th>Id</th> 
-											    			<th>Cliente</th>
-											    			<th>Ventas</th>
-											    			<th>Documento</th> 
-											    			<th>Telefono</th>
-											    			<th>Email</th>
-											    			<th>Opciones</th> 
-											    		</tr> 
-											    	</thead> 
-											    	<tbody> 
-											    		<?php echo $datos; ?>
-											    	</tbody> 
-											    </table>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-		</div>
-	 	<!-- Tab panes -->
-		
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-	  
-	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.min.js"></script>
-	<script src="//cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.5.0/sweetalert2.min.js" integrity="sha512-V9JHp52ZkrbVVjJqNz/XXYMUOyUfzaGKEGrcD2Ual7n39+UR1yJK0numAHZqkhhGTAH/Klj0KUe4btAZXccw9w==" crossorigin="anonymous"></script>
-	<script >
-	// A $( document ).ready() block.
-	$(document ).ready(function() {
-		$.extend( true, $.fn.dataTable.defaults, {
-		    "language": {
-		        "decimal": ",",
-		        "thousands": ".",
-		        "info": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-		        "infoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
-		        "infoPostFix": "",
-		        "infoFiltered": "(filtrado de un total de _MAX_ registros)",
-		        "loadingRecords": "Cargando...",
-		        "lengthMenu": "Mostrar _MENU_ registros",
-		        "paginate": {
-		            "first": "Primero",
-		            "last": "Último",
-		            "next": "Siguiente",
-		            "previous": "Anterior"
-		        },
-		        "processing": "Procesando...",
-		        "search": "Buscar:",
-		        "searchPlaceholder": "Término de búsqueda",
-		        "zeroRecords": "No se encontraron resultados",
-		        "emptyTable": "Ningún dato disponible en esta tabla",
-		        "aria": {
-		            "sortAscending":  ": Activar para ordenar la columna de manera ascendente",
-		            "sortDescending": ": Activar para ordenar la columna de manera descendente"
-		        },
-		        //only works for built-in buttons, not for custom buttons
-		        "buttons": {
-		            "create": "Nuevo",
-		            "edit": "Cambiar",
-		            "remove": "Borrar",
-		            "copy": "Copiar",
-		            "csv": "fichero CSV",
-		            "excel": "tabla Excel",
-		            "pdf": "documento PDF",
-		            "print": "Imprimir",
-		            "colvis": "Visibilidad columnas",
-		            "collection": "Colección",
-		            "upload": "Seleccione fichero...."
-		        },
-		        "select": {
-		            "rows": {
-		                _: '%d filas seleccionadas',
-		                0: 'clic fila para seleccionar',
-		                1: 'una fila seleccionada'
-		            }
-		        }
-		    }           
-		} );     
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f6fa;
+            overflow-x: hidden;
+        }
 
-		$('#datos').DataTable();	
-	    console.log( "ready!" );
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
 
-	    $('body').on('click',"#borrar", function() {
-	    	Swal.fire({
-			  title: 'Seguro de borrar?',
-			  text: "Tu no puedes revertir esto!",
-			  icon: 'warning',
-			  showCancelButton: true,
-			  confirmButtonColor: '#3085d6',
-			  cancelButtonColor: '#d33',
-			  confirmButtonText: 'Si, borrar!'
-			}).then((result) => {
-			  if (result.isConfirmed) {
-			  	var id = $(this).val();
-				var str1 = 'id=' + id;
-			  	$.ajax({	
-			    	type:'GET',
-					dataType: 'json',
-				  	url: '/inc/borrar_usuario.php',
-				  	data: str1,
-				  	success: function(data1) {
-				   	 	console.log('borrado');
-				   	 	document.location.href = "ver_usuarios.php";
-				   	 	
-				  	}
-				});
-			    Swal.fire(
-			      'Borrado!',
-			      'El registro fue borrado correctamente.',
-			      'success'
-			    )
-			  }
-			})
-			
-			
-		  
-		});
-	});
-		
-	</script>
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header img {
+            max-height: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-header img {
+            max-height: 35px;
+        }
+
+        .sidebar-header h4 {
+            color: white;
+            margin-top: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-header h4 {
+            opacity: 0;
+            font-size: 0;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            padding-left: 30px;
+        }
+
+        .sidebar-menu a.active {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-left: 4px solid white;
+        }
+
+        .sidebar-menu i {
+            width: 25px;
+            font-size: 1.2rem;
+            margin-right: 15px;
+        }
+
+        .sidebar.collapsed .sidebar-menu span {
+            opacity: 0;
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-menu a {
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .sidebar.collapsed .sidebar-menu i {
+            margin-right: 0;
+        }
+
+        /* Toggle Button */
+        .toggle-btn {
+            position: absolute;
+            right: -15px;
+            top: 20px;
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s ease;
+            min-height: 100vh;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3436;
+            margin: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Content Container */
+        .content-container {
+            padding: 30px;
+        }
+
+        /* Card Styles */
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            border: none;
+        }
+
+        .content-card .card-header-custom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .content-card .card-header-custom h5 {
+            margin: 0;
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        /* Sub Navigation */
+        .sub-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .sub-nav .nav-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .sub-nav .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .sub-nav .nav-btn:not(.active) {
+            background: #f0f0f0;
+            color: #636e72;
+        }
+
+        .sub-nav .nav-btn:hover:not(.active) {
+            background: #e0e0e0;
+        }
+
+        /* Modern Table Styles */
+        .modern-table thead {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .modern-table thead th {
+            color: white;
+            font-weight: 600;
+            padding: 15px;
+            text-align: left;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+        }
+
+        .modern-table tbody tr {
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .modern-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .modern-table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+        }
+
+        .modern-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        /* Action Buttons */
+        .btn-action {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 3px;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-action.btn-edit {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .btn-action.btn-view {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-action.btn-delete {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            color: white;
+        }
+
+        /* DataTables Custom Styling */
+        .dataTables_wrapper .dataTables_filter input {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 8px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 5px 10px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 8px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #f0f0f0 !important;
+            color: #333 !important;
+            border: none !important;
+            border-radius: 8px;
+        }
+
+        /* Badge Styles */
+        .badge-ventas {
+            background: linear-gradient(135deg, #56ab2f, #a8e063);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: var(--sidebar-collapsed-width);
+            }
+
+            .main-content {
+                margin-left: var(--sidebar-collapsed-width);
+            }
+
+            .sidebar-menu span {
+                display: none;
+            }
+
+            .sub-nav {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="/assets/img/harlec-sistema.png" alt="Logo" class="img-fluid">
+            <h4>Ferretería</h4>
+        </div>
+        <div class="toggle-btn" onclick="toggleSidebar()">
+            <i class="fas fa-chevron-left" id="toggle-icon"></i>
+        </div>
+        <ul class="sidebar-menu">
+            <?php
+            $menuType = $_SESSION['type'];
+            $menuItems = '';
+
+            if ($menuType == 'admin') {
+                $menuItems = '
+                    <li><a href="dashboard.php"><i class="fas fa-home"></i><span>Escritorio</span></a></li>
+                    <li><a href="ver_usuarios.php"><i class="fas fa-users"></i><span>Usuarios</span></a></li>
+                    <li><a href="ver_clientes.php" class="active"><i class="fas fa-user-tie"></i><span>Clientes</span></a></li>
+                    <li><a href="ver_productos.php"><i class="fas fa-box"></i><span>Productos</span></a></li>
+                    <li><a href="venta.php"><i class="fas fa-shopping-cart"></i><span>Ventas</span></a></li>
+                    <li><a href="compra.php"><i class="fas fa-truck"></i><span>Compras</span></a></li>
+                    <li><a href="reportes.php"><i class="fas fa-chart-bar"></i><span>Reportes</span></a></li>
+                    <li><a href="salir.php"><i class="fas fa-sign-out-alt"></i><span>Salir</span></a></li>
+                ';
+            } else {
+                $menuItems = '
+                    <li><a href="dashboard.php"><i class="fas fa-home"></i><span>Escritorio</span></a></li>
+                    <li><a href="venta.php"><i class="fas fa-shopping-cart"></i><span>Ventas</span></a></li>
+                    <li><a href="salir.php"><i class="fas fa-sign-out-alt"></i><span>Salir</span></a></li>
+                ';
+            }
+            echo $menuItems;
+            ?>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <h1><i class="fas fa-user-tie me-2"></i>Gestión de Clientes</h1>
+            <div class="user-info">
+                <span>Bienvenido, <strong><?php echo strtoupper($_SESSION['usuario']); ?></strong></span>
+                <div class="avatar">
+                    <?php echo strtoupper(substr($_SESSION['usuario'], 0, 1)); ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content-container">
+            <!-- Sub Navigation -->
+            <div class="sub-nav">
+                <a href="agregar_cliente.php" class="nav-btn">
+                    <i class="fas fa-plus me-2"></i>Registrar Cliente
+                </a>
+                <a href="ver_clientes.php" class="nav-btn active">
+                    <i class="fas fa-list me-2"></i>Listar Clientes
+                </a>
+            </div>
+
+            <!-- Table Card -->
+            <div class="content-card">
+                <div class="card-header-custom">
+                    <h5><i class="fas fa-users me-2"></i>Lista de Clientes</h5>
+                    <span class="badge bg-primary"><?php echo count($clientes_list); ?> clientes</span>
+                </div>
+                <div class="table-responsive">
+                    <table id="datos" class="table modern-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Cliente</th>
+                                <th>Ventas</th>
+                                <th>Documento</th>
+                                <th>Teléfono</th>
+                                <th>Email</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            if (is_array($clientes_list) && count($clientes_list) > 0) {
+                                foreach ($clientes_list as $value) {
+                                    $vc = Sdba::table('ventas');
+                                    $vc->where('cliente', $value['id_cliente']);
+                                    $cantidad = $vc->total();
+
+                                    echo '<tr>
+                                        <td><strong>#' . $value['id_cliente'] . '</strong></td>
+                                        <td>' . htmlspecialchars($value['cliente']) . '</td>
+                                        <td><span class="badge-ventas">' . $cantidad . '</span></td>
+                                        <td>' . htmlspecialchars($value['doc_identidad']) . '</td>
+                                        <td><i class="fas fa-phone text-muted me-1"></i>' . htmlspecialchars($value['telefono']) . '</td>
+                                        <td><i class="fas fa-envelope text-muted me-1"></i>' . htmlspecialchars($value['email']) . '</td>
+                                        <td>
+                                            <a href="editar_cliente.php?id=' . $value['id_cliente'] . '" class="btn-action btn-edit" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="ver_cliente.php?id=' . $value['id_cliente'] . '" class="btn-action btn-view" title="Ver detalle">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>';
+                                }
+                            } else {
+                                echo '<tr>
+                                    <td colspan="7" class="text-center text-muted py-5">
+                                        <i class="fas fa-users fa-3x mb-3 d-block"></i>
+                                        No hay clientes registrados
+                                    </td>
+                                </tr>';
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="assets/js/sweetalert2.all.min.js"></script>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('toggle-icon');
+
+            sidebar.classList.toggle('collapsed');
+
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('fa-chevron-left');
+                icon.classList.add('fa-chevron-right');
+            } else {
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-chevron-left');
+            }
+        }
+
+        $(document).ready(function() {
+            $.extend(true, $.fn.dataTable.defaults, {
+                "language": {
+                    "decimal": ",",
+                    "thousands": ".",
+                    "info": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                    "infoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+                    "infoPostFix": "",
+                    "infoFiltered": "(filtrado de un total de _MAX_ registros)",
+                    "loadingRecords": "Cargando...",
+                    "lengthMenu": "Mostrar _MENU_ registros",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    },
+                    "processing": "Procesando...",
+                    "search": "Buscar:",
+                    "searchPlaceholder": "Buscar cliente...",
+                    "zeroRecords": "No se encontraron resultados",
+                    "emptyTable": "Ningún dato disponible en esta tabla",
+                    "aria": {
+                        "sortAscending": ": Activar para ordenar la columna de manera ascendente",
+                        "sortDescending": ": Activar para ordenar la columna de manera descendente"
+                    }
+                }
+            });
+
+            $('#datos').DataTable({
+                "pageLength": 10,
+                "order": [[0, "desc"]]
+            });
+
+            console.log("Clientes loaded!");
+        });
+    </script>
 </body>
 </html>
