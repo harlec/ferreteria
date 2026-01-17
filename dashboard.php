@@ -442,7 +442,6 @@ $ventas_list = $ventas->get();
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php
                                 
                                 </tbody>
                             </table>
