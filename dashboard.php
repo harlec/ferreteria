@@ -1,5 +1,17 @@
 <?php
 include('inc/control.php');
+include('inc/sdba/sdba.php');
+
+// Obtener últimas 5 ventas (copiado de ventas.php)
+$ventas = Sdba::table('ventas');
+$ventas->where('usuario',$_SESSION['id_usr'])->and_where('estado !=','2');
+if ($_SESSION['type'] =='admin') {
+	$ventas->reset();
+	$ventas->where('estado !=','2');
+}
+$ventas->order_by('id_venta','desc');
+$ventas->limit(5);
+$ventas_list = $ventas->get();
 
 ?>
 
@@ -430,12 +442,63 @@ include('inc/control.php');
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">
-                                            <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                                            No hay ventas registradas
-                                        </td>
-                                    </tr>
+                                    <?php
+                                    if (is_array($ventas_list) && count($ventas_list) > 0) {
+                                        foreach ($ventas_list as $value) {
+                                            // Calcular total de la venta (igual que en ventas.php)
+                                            $deta_ventas = Sdba::table('detalle_ventas');
+                                            $deta_ventas->where('venta', $value['id_venta']);
+                                            $total_dventa = $deta_ventas->sum('total');
+
+                                            // Tipo de venta
+                                            if ($value['tipo']=='1') {
+                                                $tipo = 'Contado';
+                                                $tipo_badge = 'success';
+                                            } else {
+                                                $tipo = 'Crédito';
+                                                $tipo_badge = 'warning';
+                                            }
+
+                                            // Forma de pago
+                                            switch ($value['forma']) {
+                                                case '1': $forma = 'Efectivo'; break;
+                                                case '2': $forma = 'Tar. Débito'; break;
+                                                case '3': $forma = 'Tar. Crédito'; break;
+                                                default: $forma = 'N/A';
+                                            }
+
+                                            // Estado
+                                            if ($value['estado']=='1') {
+                                                $estado = 'Emitida';
+                                                $estado_badge = 'success';
+                                            } else {
+                                                $estado = 'Pendiente';
+                                                $estado_badge = 'warning';
+                                            }
+
+                                            echo '<tr>
+                                                <td><strong>V-' . $value['id_venta'] . '</strong></td>
+                                                <td><span class="badge bg-' . $tipo_badge . '">' . $tipo . '</span></td>
+                                                <td><i class="fas fa-money-bill-wave text-success me-1"></i>' . $forma . '</td>
+                                                <td>' . $value['fecha'] . '</td>
+                                                <td><strong>S/ ' . number_format($total_dventa, 2) . '</strong></td>
+                                                <td><span class="badge bg-' . $estado_badge . '">' . $estado . '</span></td>
+                                                <td>
+                                                    <a href="ver_venta.php?id=' . $value['id_venta'] . '" class="btn btn-sm btn-primary" title="Ver venta">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>';
+                                        }
+                                    } else {
+                                        echo '<tr>
+                                            <td colspan="7" class="text-center text-muted py-4">
+                                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                                No hay ventas registradas
+                                            </td>
+                                        </tr>';
+                                    }
+                                    ?>
                                 </tbody>
                             </table>
                         </div>
