@@ -3,10 +3,15 @@ include('inc/control.php');
 include('inc/sdba/sdba.php');
 
 // Obtener últimas 5 ventas (copiado de ventas.php)
-$ventas1 = Sdba::table('ventas');
-$ventas1->order_by('id_venta','desc');
-$ventas1->limit(5);
-$ventas_list = $ventas-1>get();
+$ventas = Sdba::table('ventas');
+$ventas->where('usuario',$_SESSION['id_usr'])->and_where('estado !=','2');
+if ($_SESSION['type'] =='admin') {
+	$ventas->reset();
+	$ventas->where('estado !=','2');
+}
+$ventas->order_by('id_venta','desc');
+$ventas->limit(5);
+$ventas_list = $ventas->get();
 
 ?>
 
