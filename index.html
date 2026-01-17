@@ -5,54 +5,138 @@
 	<title>Sistema - Ferreteria</title>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="assets/css/custom.css">
     <link rel="stylesheet" type="text/css" href="assets/css/sweetalert.css">
+    <style>
+        body.login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .login-header img {
+            max-height: 80px;
+            filter: brightness(0) invert(1);
+        }
+        .login-header h2 {
+            color: white;
+            margin-top: 15px;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+        .login-body {
+            padding: 40px;
+        }
+        .form-floating > label {
+            color: #6c757d;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            z-index: 10;
+        }
+        .input-wrapper {
+            position: relative;
+        }
+    </style>
 </head>
 <body class="login">
 	<div class="container">
-		<div class="row">
-			<div class="col-md-4 col-sm-3"></div>
-			<div class="col-md-4 col-sm-6">
-				<div class="login-content">
-					<div class="cont-logo">
-						<img class="img-reponsive logo" src="assets/img/harlec-sistema.png">
-					</div>
-					<form id="login" style="width:85%; margin:0 auto;">
-						<div class="form-group">
-							<input type="text" placeholder="Usuario" class="form-control" name="usuario" id="usuario" required>
-						</div>
-						<div class="form-group">
-							<input type="password" placeholder="clave" class="form-control" name="pass" id="pass" required>
-						</div>
-						<div class="form-group">
-							<button style="width:100%" id="btn-login" data-loading-text="Ingresando..." class="btn btn-lg btn-pri">Ingresar</button>
-						</div>
-					</form>
-				</div>
-				
+		<div class="row justify-content-center">
+			<div class="col-lg-5 col-md-7">
+				<div class="login-card">
+                    <div class="login-header">
+                        <img class="img-fluid" src="assets/img/harlec-sistema.png" alt="Logo">
+                        <h2>Sistema de Ferretería</h2>
+                    </div>
+                    <div class="login-body">
+                        <form id="login">
+                            <div class="mb-4">
+                                <div class="input-wrapper">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="usuario" name="usuario" placeholder="Usuario" required>
+                                        <label for="usuario"><i class="fas fa-user me-2"></i>Usuario</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <div class="input-wrapper">
+                                    <div class="form-floating">
+                                        <input type="password" class="form-control" id="pass" name="pass" placeholder="Contraseña" required>
+                                        <label for="pass"><i class="fas fa-lock me-2"></i>Contraseña</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2 mb-3">
+                                <button type="submit" id="btn-login" class="btn btn-primary btn-lg btn-login">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Ingresar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <p class="text-white mb-0">
+                        <small>&copy; 2026 Sistema de Ferretería - Todos los derechos reservados</small>
+                    </p>
+                </div>
 			</div>
-			<div class="col-md-4 col-sm-3"></div>
 		</div>
 	</div>
 	
-	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-
-	<script src="assets/js/bootstrap.min.js"></script>
+	<!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 	<script src="assets/js/jquery.validate.min.js"></script>
 	<script src="assets/js/sweetalert.min.js"></script>
-	<script >
-		//$("#login").validate();
+	<script>
 		$(document).ready(function() {
 			$("#login").validate({
 				submitHandler: function(){
-
 					var str = $('#login').serialize();
-					
+					var $btn = $('#btn-login');
+
 					$.ajax({
 						beforeSend:function(){
-							$('#loader').show()
+							$btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Ingresando...').prop('disabled', true);
 						},
 						cache: false,
 						type: 'POST',
@@ -60,41 +144,25 @@
 						url: '/inc/loginJs.php',
 						data: str,
 						success: function(response){
-							var $btn = $('#btn-login').button('loading');
-
-							// swal(
-							//   'Excelente!',
-							//   response.mensaje,
-							//   'success'
-							// );
-
 							if(response.respuesta == false){
-								$btn.button('reset');
+								$btn.html('<i class="fas fa-sign-in-alt me-2"></i>Ingresar').prop('disabled', false);
 								swal('Advertencia',response.mensaje,'warning');
-								$('#loader').hide();
 							}else{
-
-								//swal('Excelente!',response.mensaje,'success');
-
 								document.location.href= 'dashboard.php';
-
 							}
-							
 						},
 						error: function(){
+							$btn.html('<i class="fas fa-sign-in-alt me-2"></i>Ingresar').prop('disabled', false);
 							swal('Advertencia','Error General del Sistema','warning');
 						}
-
 					});
 
 					return false;
-
 				},
 				errorPlacement: function(){
-
+					// Custom error placement if needed
 				}
 			});
-		    console.log( "ready!" );
 		});
 	</script>
 </body>
