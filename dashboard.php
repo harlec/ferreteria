@@ -1,80 +1,6 @@
 <?php
 include('inc/control.php');
 
-// Inicializar variables
-$ventas_list = [];
-$total_dia = 0;
-$total_mes = 0;
-$total_productos = 0;
-$total_clientes = 0;
-
-try {
-    include('inc/sdba/sdba.php');
-
-    // Obtener últimas 5 ventas
-    $ventas = Sdba::table('ventas');
-    if ($_SESSION['type'] == 'admin') {
-        $ventas->where('estado !=', '2');
-    } else {
-        $ventas->where('usuario', $_SESSION['id_usr'])->and_where('estado !=', '2');
-    }
-    $ventas->order_by('id_venta', 'desc');
-    $ventas->limit(5);
-    $ventas_list = $ventas->get();
-
-    if (!is_array($ventas_list)) {
-        $ventas_list = [];
-    }
-
-    // Total de ventas del día
-    $ventas_dia = Sdba::table('ventas');
-    $ventas_dia->where('fecha', date('Y-m-d'))->and_where('estado !=', '2');
-    if ($_SESSION['type'] != 'admin') {
-        $ventas_dia->and_where('usuario', $_SESSION['id_usr']);
-    }
-    $ventas_dia_list = $ventas_dia->get();
-
-    if (is_array($ventas_dia_list)) {
-        foreach ($ventas_dia_list as $vd) {
-            $dv = Sdba::table('detalle_ventas');
-            $dv->where('venta', $vd['id_venta']);
-            $sum = $dv->sum('total');
-            $total_dia += $sum ? $sum : 0;
-        }
-    }
-
-    // Total de ventas del mes
-    $ventas_mes = Sdba::table('ventas');
-    $ventas_mes->where('fecha >=', date('Y-m-01'))->and_where('estado !=', '2');
-    if ($_SESSION['type'] != 'admin') {
-        $ventas_mes->and_where('usuario', $_SESSION['id_usr']);
-    }
-    $ventas_mes_list = $ventas_mes->get();
-
-    if (is_array($ventas_mes_list)) {
-        foreach ($ventas_mes_list as $vm) {
-            $dv = Sdba::table('detalle_ventas');
-            $dv->where('venta', $vm['id_venta']);
-            $sum = $dv->sum('total');
-            $total_mes += $sum ? $sum : 0;
-        }
-    }
-
-    // Total de productos
-    $productos = Sdba::table('productos');
-    $total_productos = $productos->total();
-    if (!$total_productos) $total_productos = 0;
-
-    // Total de clientes
-    $clientes = Sdba::table('clientes');
-    $total_clientes = $clientes->total();
-    if (!$total_clientes) $total_clientes = 0;
-
-} catch (Exception $e) {
-    // Si hay error, mantener valores por defecto
-    error_log("Error en dashboard: " . $e->getMessage());
-}
-
 ?>
 
 
@@ -449,7 +375,7 @@ try {
                             <i class="fas fa-shopping-cart"></i>
                         </div>
                         <h6>Ventas del Día</h6>
-                        <h3>S/ <?php echo number_format($total_dia, 2); ?></h3>
+                        <h3>S/ 0.00</h3>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -458,7 +384,7 @@ try {
                             <i class="fas fa-box"></i>
                         </div>
                         <h6>Productos</h6>
-                        <h3><?php echo $total_productos; ?></h3>
+                        <h3>0</h3>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -467,7 +393,7 @@ try {
                             <i class="fas fa-user-tie"></i>
                         </div>
                         <h6>Clientes</h6>
-                        <h3><?php echo $total_clientes; ?></h3>
+                        <h3>0</h3>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -476,7 +402,7 @@ try {
                             <i class="fas fa-chart-bar"></i>
                         </div>
                         <h6>Ventas del Mes</h6>
-                        <h3>S/ <?php echo number_format($total_mes, 2); ?></h3>
+                        <h3>S/ 0.00</h3>
                     </div>
                 </div>
             </div>
@@ -504,53 +430,12 @@ try {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php
-                                    if (count($ventas_list) > 0) {
-                                        foreach ($ventas_list as $venta) {
-                                            // Calcular total de la venta
-                                            $dv = Sdba::table('detalle_ventas');
-                                            $dv->where('venta', $venta['id_venta']);
-                                            $total_venta = $dv->sum('total');
-
-                                            // Tipo de venta
-                                            $tipo = ($venta['tipo'] == '1') ? 'Contado' : 'Crédito';
-                                            $tipo_badge = ($venta['tipo'] == '1') ? 'success' : 'warning';
-
-                                            // Forma de pago
-                                            switch ($venta['forma']) {
-                                                case '1': $forma = 'Efectivo'; break;
-                                                case '2': $forma = 'Tar. Débito'; break;
-                                                case '3': $forma = 'Tar. Crédito'; break;
-                                                default: $forma = 'N/A';
-                                            }
-
-                                            // Estado
-                                            $estado = ($venta['estado'] == '1') ? 'Emitida' : 'Pendiente';
-                                            $estado_badge = ($venta['estado'] == '1') ? 'success' : 'warning';
-
-                                            echo '<tr>
-                                                <td><strong>V-' . $venta['id_venta'] . '</strong></td>
-                                                <td><span class="badge bg-' . $tipo_badge . '">' . $tipo . '</span></td>
-                                                <td><i class="fas fa-money-bill-wave text-success me-1"></i>' . $forma . '</td>
-                                                <td>' . date('d/m/Y', strtotime($venta['fecha'])) . '</td>
-                                                <td><strong>S/ ' . number_format($total_venta, 2) . '</strong></td>
-                                                <td><span class="badge bg-' . $estado_badge . '">' . $estado . '</span></td>
-                                                <td>
-                                                    <a href="ver_venta.php?id=' . $venta['id_venta'] . '" class="btn btn-sm btn-primary" title="Ver venta">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                </td>
-                                            </tr>';
-                                        }
-                                    } else {
-                                        echo '<tr>
-                                            <td colspan="7" class="text-center text-muted py-4">
-                                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                                                No hay ventas registradas
-                                            </td>
-                                        </tr>';
-                                    }
-                                    ?>
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                            No hay ventas registradas
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
