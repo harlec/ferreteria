@@ -10,232 +10,535 @@ if ($_SESSION['type']=='operador') {
 <html lang="es">
 <head>
 	<meta charset="UTF-8">
-	<title>Sistema - Menu Principal</title>
+	<title>Sistema - Registrar Usuario</title>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="/assets/css/custom.css">
-    <link rel="stylesheet" href="/assets/css/jquery-ui.min.css">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.0.5/sweetalert2.min.css">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/assets/css/sweetalert2.min.css">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --sidebar-collapsed-width: 80px;
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --dark-bg: #1a1d29;
+            --darker-bg: #13151f;
+            --text-light: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f6fa;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header img {
+            max-height: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-header img {
+            max-height: 35px;
+        }
+
+        .sidebar-header h4 {
+            color: white;
+            margin-top: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-header h4 {
+            opacity: 0;
+            font-size: 0;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            padding-left: 30px;
+        }
+
+        .sidebar-menu a.active {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-left: 4px solid white;
+        }
+
+        .sidebar-menu i {
+            width: 25px;
+            font-size: 1.2rem;
+            margin-right: 15px;
+        }
+
+        .sidebar.collapsed .sidebar-menu span {
+            opacity: 0;
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-menu a {
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .sidebar.collapsed .sidebar-menu i {
+            margin-right: 0;
+        }
+
+        /* Toggle Button */
+        .toggle-btn {
+            position: absolute;
+            right: -15px;
+            top: 20px;
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s ease;
+            min-height: 100vh;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3436;
+            margin: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Content Container */
+        .content-container {
+            padding: 30px;
+        }
+
+        /* Card Styles */
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            border: none;
+        }
+
+        .content-card .card-header-custom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .content-card .card-header-custom h5 {
+            margin: 0;
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        /* Sub Navigation */
+        .sub-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .sub-nav .nav-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .sub-nav .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .sub-nav .nav-btn:not(.active) {
+            background: #f0f0f0;
+            color: #636e72;
+        }
+
+        .sub-nav .nav-btn:hover:not(.active) {
+            background: #e0e0e0;
+        }
+
+        /* Form Styles */
+        .form-label {
+            font-weight: 600;
+            color: #2d3436;
+            margin-bottom: 8px;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #aaa;
+        }
+
+        .input-group-text {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            color: white;
+            border-radius: 10px 0 0 10px;
+        }
+
+        .input-group .form-control, .input-group .form-select {
+            border-radius: 0 10px 10px 0;
+        }
+
+        /* Button Styles */
+        .btn-submit {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            color: white;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-cancel {
+            background: #f0f0f0;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            color: #636e72;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: var(--sidebar-collapsed-width);
+            }
+
+            .main-content {
+                margin-left: var(--sidebar-collapsed-width);
+            }
+
+            .sidebar-menu span {
+                display: none;
+            }
+
+            .sub-nav {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
 </head>
 
-<body class="mobile dashboard">
-	<div class="">
-		<nav class="navbar navbar-inverse navbar-fixed-top">
-	      <div class="">
-	        <div class="navbar-header">
-	          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-	            <span class="sr-only">Toggle navigation</span>
-	            <span class="icon-bar"></span>
-	            <span class="icon-bar"></span>
-	            <span class="icon-bar"></span>
-	          </button>
-	          <a class="navbar-brand" href="#"><img class="img-responsive logo" src="/assets/img/harlec-sistema.png"></a>
-	        </div>
-	        <?php menu('2'); ?>
-	      </div>
-	      <div class="submenu">
-	      	<ul class="subtop-tabs">
-	      		<li class="active">
-	      			<a class="" href="agregar_usuario.php">Registrar usuario</a>
-	      		</li>
-	      		<li >
-	      			<a class="" href="ver_usuarios.php">Listar usuarios</a>
-	      		</li>
-	      		<li >
-	      			<a class="" href="agregar_empleado.php">Agregar colaborador</a>
-	      		</li>
-	      		<li >
-	      			<a class="" href="ver_empleados.php">Listar colaboradores</a>
-	      		</li>
-	      	</ul>
-	      </div>
-	    </nav>
-		<div class="kbg">
-			<div class="cuerpofull">
-				<div class="titulo">
-					<h3>Registrar usuario</h3>
-				</div>
-				<div class="container-fluid">
-					<div class="row">
-						<div class="col-md-12">
-							<div class="kdashboard">
-								<div class="row">
-									<div class="col-md-6">
-										<div class="panel panel-default pa">
-											<div class="panel-body">
-											    <form id="venta">
-											    	<div class="row">
-											    		<div class="col-md-12">
-											    			<div class="form-group">
-															    <label for="exampleInputPassword1">Nombres</label>
-															    <input type="text" class="form-control" name="nombre" id="nombre" placeholder="Nombre">
-															</div>
-															<div class="form-group">
-															    <label for="exampleInputPassword1">Usuario</label>
-															    <input type="text" class="form-control" name="usuario" id="usuario" placeholder="Usuario">
-															</div>
-															<div class="form-group">
-															    <label for="exampleInputPassword1">Password</label>
-															    <input type="password" class="form-control" name="password" id="password" placeholder="password">
-															</div>
-															<div class="form-group">
-															    <label for="exampleInputPassword1">Rol</label>
-															    <select class="form-control" name="rol" id="rol">
-															    	<option value="admin">administrador</option>
-															    	<option value="operador">vendedor</option>
-															    </select>
-															</div>
-															<div class="form-group">
-															    <label for="exampleInputPassword1">Tienda</label>
-															    <select name="tienda" class="form-control">
-															    	<option value="1">Tienda 1</option>
-															    	<option value="2">Tienda 2</option>
-															    	<option value="3">Tienda 3</option>
-															    </select>
-															</div>
-											    		</div>
-											    	</div>
-											    	
-												  <button type="button" id="guardar_venta" class="btn btn-success btn-block btn-lg">Registrar</button>
-												</form>
-			
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	 	<!-- Tab panes -->
-		
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="/assets/img/harlec-sistema.png" alt="Logo" class="img-fluid">
+            <h4>Ferretería</h4>
+        </div>
+        <div class="toggle-btn" onclick="toggleSidebar()">
+            <i class="fas fa-chevron-left" id="toggle-icon"></i>
+        </div>
+        <ul class="sidebar-menu">
+            <?php
+            $menuType = $_SESSION['type'];
+            $menuItems = '';
 
-	  
-	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="/assets/js/jquery-ui.min.js"></script> 
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.0.5/sweetalert2.min.js"></script>
-	<script >
-	// A $( document ).ready() block.
-	$(document ).ready(function() {
+            if ($menuType == 'admin') {
+                $menuItems = '
+                    <li><a href="dashboard.php"><i class="fas fa-home"></i><span>Escritorio</span></a></li>
+                    <li><a href="ver_usuarios.php" class="active"><i class="fas fa-users"></i><span>Usuarios</span></a></li>
+                    <li><a href="ver_clientes.php"><i class="fas fa-user-tie"></i><span>Clientes</span></a></li>
+                    <li><a href="ver_productos.php"><i class="fas fa-box"></i><span>Productos</span></a></li>
+                    <li><a href="venta.php"><i class="fas fa-shopping-cart"></i><span>Ventas</span></a></li>
+                    <li><a href="compra.php"><i class="fas fa-truck"></i><span>Compras</span></a></li>
+                    <li><a href="reportes.php"><i class="fas fa-chart-bar"></i><span>Reportes</span></a></li>
+                    <li><a href="salir.php"><i class="fas fa-sign-out-alt"></i><span>Salir</span></a></li>
+                ';
+            } else {
+                $menuItems = '
+                    <li><a href="dashboard.php"><i class="fas fa-home"></i><span>Escritorio</span></a></li>
+                    <li><a href="venta.php"><i class="fas fa-shopping-cart"></i><span>Ventas</span></a></li>
+                    <li><a href="salir.php"><i class="fas fa-sign-out-alt"></i><span>Salir</span></a></li>
+                ';
+            }
+            echo $menuItems;
+            ?>
+        </ul>
+    </div>
 
-		var total = 0;
-			$('#add').click(function() {
-				var plato = $( "#basics" ).val();
-				var precio = $('#precio').val();
-				var monto = $( "#cantidad" ).val();
-				var id_p = $( "#id_p" ).val();
-				var cantidad = (monto / precio).toFixed(2);
-				total = monto*1 + total*1;
-				//alert (total);
-		       	$('#items tr:last').after('<tr class="child"><td><input value="'+plato+'" name="plato[]"></td><td><input value="'+precio+'" name="precio[]"></td><td><input value="'+cantidad+'" name="cantidad[]"></td><td>'+monto+' <input type="hidden" value="'+id_p+'" name="id_pro[]" ><input type="hidden" value="'+monto+'" name="total_pre[]" ></td><td><button value="'+monto+'" class="borrar"><i class="fa fa-trash" aria-hidden="true"></i></button></td></tr>');
-		       	$("#basics").val("");
-		       	$("#precio").val("");
-		       	$("#cantidad").val("");
-		       	$("#total").val(total);
-		    });
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <h1><i class="fas fa-user-plus me-2"></i>Registrar Usuario</h1>
+            <div class="user-info">
+                <span>Bienvenido, <strong><?php echo strtoupper($_SESSION['usuario']); ?></strong></span>
+                <div class="avatar">
+                    <?php echo strtoupper(substr($_SESSION['usuario'], 0, 1)); ?>
+                </div>
+            </div>
+        </div>
 
-		    //borrar item
-		    $("#items").on('click', '.borrar', function () {
-			    //$(this).closest('tr').remove();
-			    
-			    var resta = $(this).val();
-			    console.log(resta)
-			    $(this).parents("tr").remove();
-			    total = total - resta*1;
-			    $("#total").val(total);
-			});
+        <!-- Content -->
+        <div class="content-container">
+            <!-- Sub Navigation -->
+            <div class="sub-nav">
+                <a href="agregar_usuario.php" class="nav-btn active">
+                    <i class="fas fa-user-plus me-2"></i>Registrar Usuario
+                </a>
+                <a href="ver_usuarios.php" class="nav-btn">
+                    <i class="fas fa-list me-2"></i>Listar Usuarios
+                </a>
+                <a href="agregar_empleado.php" class="nav-btn">
+                    <i class="fas fa-id-badge me-2"></i>Agregar Colaborador
+                </a>
+                <a href="ver_empleados.php" class="nav-btn">
+                    <i class="fas fa-id-card me-2"></i>Listar Colaboradores
+                </a>
+            </div>
 
-	   		//autocompletamos el producto
-		    $('#basics').autocomplete({
-		      	source: function(request,response){
-					var str = 'term='+request.term;
-					//alert('entro');
-					$.ajax({
-							type:'GET',
-							dataType: 'json',
-							url: '/inc/autocomplete-producto.php',
-							data: str,
-							success: function(data){
-								response(data);
-								//$("#precio").val('12');
-							}
-					});
-				}
-				//minLength: 2
-		    });
+            <!-- Form Card -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="content-card">
+                        <div class="card-header-custom">
+                            <h5><i class="fas fa-user-edit me-2"></i>Datos del Usuario</h5>
+                        </div>
+                        <form id="venta">
+                            <div class="mb-4">
+                                <label class="form-label">Nombres</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" class="form-control" name="nombre" id="nombre" placeholder="Nombre completo" required>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">Usuario</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-at"></i></span>
+                                    <input type="text" class="form-control" name="usuario" id="usuario" placeholder="Nombre de usuario" required>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">Contraseña</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" name="password" id="password" placeholder="Contraseña segura" required>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">Rol</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user-shield"></i></span>
+                                    <select class="form-select" name="rol" id="rol" required>
+                                        <option value="admin">Administrador</option>
+                                        <option value="operador">Vendedor</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">Tienda</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-store"></i></span>
+                                    <select class="form-select" name="tienda" required>
+                                        <option value="1">Tienda 1</option>
+                                        <option value="2">Tienda 2</option>
+                                        <option value="3">Tienda 3</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-md-6 mb-3">
+                                    <a href="ver_usuarios.php" class="btn btn-cancel">
+                                        <i class="fas fa-times me-2"></i>Cancelar
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <button type="button" id="guardar_venta" class="btn btn-submit">
+                                        <i class="fas fa-save me-2"></i>Registrar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-		    //obtenemos el precio
-		    $('#basics').on('change paste keyup', function(){
-		    	var str1 = 'producto='+$('#basics').val();
-		    	//alert (str1);
-		    	$.ajax({	
-			    	type:'GET',
-					dataType: 'json',
-				  	url: '/inc/autocomplete-precio.php',
-				  	data: str1,
-				  	success: function(response) {
-				   	 	$('#precio').val(response.precio);
-				   	 	$('#id_p').val(response.id_p);
-				   	 	
-				  	}
-				});
-			});
-		$('body').on('click',"#guardar_venta", function(e){
-          e.preventDefault();
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/sweetalert2.all.min.js"></script>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('toggle-icon');
 
-				
-				//var tipoVenta = $('input:radio[name=pregunta]:checked').val();
-				//DNI = $('#dni_ruc').val();
+            sidebar.classList.toggle('collapsed');
 
-				var str2 = $('#venta').serialize();
-				alert(str2);
-				
-				$.ajax({
-					cache: false,
-					type: "POST",
-					dataType: "json",
-					url: "/inc/registrar_usuario.php",
-					data: str2,
-					success: function(response){
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('fa-chevron-left');
+                icon.classList.add('fa-chevron-right');
+            } else {
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-chevron-left');
+            }
+        }
 
-						if(response.respuesta == false){
-							swal('Advertencia',response.mensaje,'warning');
-							
+        $(document).ready(function() {
+            $('body').on('click', "#guardar_venta", function(e) {
+                e.preventDefault();
 
+                var str2 = $('#venta').serialize();
 
-						}else{
+                $.ajax({
+                    cache: false,
+                    type: "POST",
+                    dataType: "json",
+                    url: "/inc/registrar_usuario.php",
+                    data: str2,
+                    success: function(response) {
+                        if (response.respuesta == false) {
+                            Swal.fire('Advertencia', response.mensaje, 'warning');
+                        } else {
+                            Swal.fire('Perfecto', 'Usuario registrado correctamente', 'success');
+                            document.location.href = "ver_usuarios.php";
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Advertencia', 'Error General del Sistema', 'warning');
+                    }
+                });
+            });
 
-							swal('Perfecto', response.idventa,'success');
-							//var id_venta = response.id_venta;
-							console.log(response.mesa);
-							//$('#mostrarmesa').load('inc/mobile/ver_mesa.php?mesa='+ response.mesa);
-							document.location.href = "ver_usuarios.php";
-						
-						}
-					
-					},
-					error: function(){
-						swal('Advertencia','Error General del Sistema','warning');
-					}
-				});
-				
-				//$(this ).hide();
-				//return false;
-
-			
-		});
-
-		
-	    console.log( "ready!" );
-	});
-		
-	</script>
+            console.log("Agregar Usuario loaded!");
+        });
+    </script>
 </body>
 </html>
