@@ -93,7 +93,7 @@ foreach ($el as $value) {
         .user-info .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
         .content-container { padding: 20px; display: flex; gap: 20px; }
         .main-panel { flex: 1; }
-        .side-panel { width: 800px; }
+        .side-panel { width: 450px; }
         .content-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
         .content-card .card-header-custom { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
         .content-card .card-header-custom h5 { margin: 0; font-weight: 600; color: #2d3436; }
