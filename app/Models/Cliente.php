@@ -3,10 +3,10 @@ namespace App\Models;
 
 class Cliente extends Model
 {
-    protected static string $table = 'clientes';
-    protected static string $primaryKey = 'id_cliente';
+    protected static $table = 'clientes';
+    protected static $primaryKey = 'id_cliente';
 
-    protected static array $fillable = [
+    protected static $fillable = [
         'cliente',
         'doc_identidad',
         'telefono',
@@ -14,7 +14,7 @@ class Cliente extends Model
         'estado',
     ];
 
-    protected static array $rules = [
+    protected static $rules = [
         'cliente'       => 'required|min:3|max:200',
         'doc_identidad' => 'required|min:8|max:11',
     ];

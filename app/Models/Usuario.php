@@ -3,10 +3,10 @@ namespace App\Models;
 
 class Usuario extends Model
 {
-    protected static string $table = 'usuarios';
-    protected static string $primaryKey = 'id_usuario';
+    protected static $table = 'usuarios';
+    protected static $primaryKey = 'id_usuario';
 
-    protected static array $fillable = [
+    protected static $fillable = [
         'nombres',
         'usuario',
         'clave',
@@ -15,7 +15,7 @@ class Usuario extends Model
         'estado',
     ];
 
-    protected static array $rules = [
+    protected static $rules = [
         'nombres' => 'required|min:3|max:100',
         'usuario' => 'required|min:3|max:50',
         'clave'   => 'required|min:6',

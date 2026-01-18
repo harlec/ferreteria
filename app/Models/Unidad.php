@@ -3,15 +3,15 @@ namespace App\Models;
 
 class Unidad extends Model
 {
-    protected static string $table = 'unidades';
-    protected static string $primaryKey = 'id_unidad';
+    protected static $table = 'unidades';
+    protected static $primaryKey = 'id_unidad';
 
-    protected static array $fillable = [
+    protected static $fillable = [
         'nombre',
         'estado',
     ];
 
-    protected static array $rules = [
+    protected static $rules = [
         'nombre' => 'required|min:2|max:50',
     ];
 

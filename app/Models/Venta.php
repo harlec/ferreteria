@@ -3,10 +3,10 @@ namespace App\Models;
 
 class Venta extends Model
 {
-    protected static string $table = 'ventas';
-    protected static string $primaryKey = 'id_venta';
+    protected static $table = 'ventas';
+    protected static $primaryKey = 'id_venta';
 
-    protected static array $fillable = [
+    protected static $fillable = [
         'fecha',
         'fecha_ope',
         'total',

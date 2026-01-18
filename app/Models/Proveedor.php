@@ -3,10 +3,10 @@ namespace App\Models;
 
 class Proveedor extends Model
 {
-    protected static string $table = 'proveedores';
-    protected static string $primaryKey = 'id_proveedor';
+    protected static $table = 'proveedores';
+    protected static $primaryKey = 'id_proveedor';
 
-    protected static array $fillable = [
+    protected static $fillable = [
         'proveedor',
         'doc_identidad',
         'direccion',
@@ -15,7 +15,7 @@ class Proveedor extends Model
         'estado',
     ];
 
-    protected static array $rules = [
+    protected static $rules = [
         'proveedor'     => 'required|min:3|max:200',
         'doc_identidad' => 'required|ruc',
     ];

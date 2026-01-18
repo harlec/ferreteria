@@ -3,15 +3,15 @@ namespace App\Models;
 
 class Marca extends Model
 {
-    protected static string $table = 'marca';
-    protected static string $primaryKey = 'id_marca';
+    protected static $table = 'marca';
+    protected static $primaryKey = 'id_marca';
 
-    protected static array $fillable = [
+    protected static $fillable = [
         'marca',
         'estado',
     ];
 
-    protected static array $rules = [
+    protected static $rules = [
         'marca' => 'required|min:2|max:100',
     ];
 

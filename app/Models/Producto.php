@@ -3,10 +3,10 @@ namespace App\Models;
 
 class Producto extends Model
 {
-    protected static string $table = 'productos';
-    protected static string $primaryKey = 'id_producto';
+    protected static $table = 'productos';
+    protected static $primaryKey = 'id_producto';
 
-    protected static array $fillable = [
+    protected static $fillable = [
         'cod_sunat',
         'serie',
         'nom_prod',
@@ -22,7 +22,7 @@ class Producto extends Model
         'estado',
     ];
 
-    protected static array $rules = [
+    protected static $rules = [
         'nom_prod'        => 'required|min:2|max:255',
         'codigo_producto' => 'required',
         'precio_venta'    => 'required|numeric|minValue:0',

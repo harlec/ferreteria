@@ -3,15 +3,15 @@ namespace App\Models;
 
 class Color extends Model
 {
-    protected static string $table = 'color';
-    protected static string $primaryKey = 'id_color';
+    protected static $table = 'color';
+    protected static $primaryKey = 'id_color';
 
-    protected static array $fillable = [
+    protected static $fillable = [
         'color',
         'estado',
     ];
 
-    protected static array $rules = [
+    protected static $rules = [
         'color' => 'required|min:2|max:50',
     ];
 

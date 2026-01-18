@@ -3,10 +3,10 @@ namespace App\Models;
 
 class Stock extends Model
 {
-    protected static string $table = 'stock';
-    protected static string $primaryKey = 'id_stock';
+    protected static $table = 'stock';
+    protected static $primaryKey = 'id_stock';
 
-    protected static array $fillable = [
+    protected static $fillable = [
         'producto',
         'ingreso',
         'egreso',

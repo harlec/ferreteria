@@ -3,15 +3,15 @@ namespace App\Models;
 
 class Categoria extends Model
 {
-    protected static string $table = 'categorias';
-    protected static string $primaryKey = 'id_categoria';
+    protected static $table = 'categorias';
+    protected static $primaryKey = 'id_categoria';
 
-    protected static array $fillable = [
+    protected static $fillable = [
         'nom_cat',
         'estado',
     ];
 
-    protected static array $rules = [
+    protected static $rules = [
         'nom_cat' => 'required|min:2|max:100',
     ];
 
