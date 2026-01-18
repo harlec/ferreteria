@@ -60,11 +60,73 @@ foreach ($el as $value) {
 	<title>Sistema - Menu Principal</title>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="/assets/css/custom.css">
-    <link rel="stylesheet" href="/assets/css/jquery-ui.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.0.5/sweetalert2.min.css">
-    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="/assets/css/sweetalert2.min.css">
+    <style>
+        :root { --sidebar-width: 260px; --sidebar-collapsed-width: 80px; --primary-color: #667eea; --secondary-color: #764ba2; --dark-bg: #1a1d29; --darker-bg: #13151f; --text-light: #e0e0e0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f6fa; overflow-x: hidden; }
+        .sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: var(--sidebar-width); background: linear-gradient(180deg, var(--dark-bg) 0%, var(--darker-bg) 100%); box-shadow: 4px 0 15px rgba(0,0,0,0.1); transition: all 0.3s ease; z-index: 1000; }
+        .sidebar.collapsed { width: var(--sidebar-collapsed-width); }
+        .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-header img { max-height: 50px; }
+        .sidebar.collapsed .sidebar-header img { max-height: 35px; }
+        .sidebar-header h4 { color: white; margin-top: 10px; font-size: 1rem; font-weight: 600; }
+        .sidebar.collapsed .sidebar-header h4 { opacity: 0; font-size: 0; }
+        .sidebar-menu { list-style: none; padding: 20px 0; }
+        .sidebar-menu li { margin-bottom: 5px; }
+        .sidebar-menu a { display: flex; align-items: center; padding: 15px 25px; color: var(--text-light); text-decoration: none; transition: all 0.3s ease; }
+        .sidebar-menu a:hover { background: rgba(255,255,255,0.1); padding-left: 30px; }
+        .sidebar-menu a.active { background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); border-left: 4px solid white; }
+        .sidebar-menu i { width: 25px; font-size: 1.2rem; margin-right: 15px; }
+        .sidebar.collapsed .sidebar-menu span { display: none; }
+        .sidebar.collapsed .sidebar-menu a { justify-content: center; padding: 15px; }
+        .sidebar.collapsed .sidebar-menu i { margin-right: 0; }
+        .toggle-btn { position: absolute; right: -15px; top: 20px; width: 30px; height: 30px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .main-content { margin-left: var(--sidebar-width); transition: all 0.3s ease; min-height: 100vh; }
+        .sidebar.collapsed ~ .main-content { margin-left: var(--sidebar-collapsed-width); }
+        .top-bar { background: white; padding: 20px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .top-bar h1 { font-size: 1.5rem; font-weight: 600; color: #2d3436; margin: 0; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-info .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
+        .content-container { padding: 20px; display: flex; gap: 20px; }
+        .main-panel { flex: 1; }
+        .side-panel { width: 800px; }
+        .content-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        .content-card .card-header-custom { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .content-card .card-header-custom h5 { margin: 0; font-weight: 600; color: #2d3436; }
+        .sub-nav { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .sub-nav .nav-btn { padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 500; transition: all 0.3s ease; }
+        .sub-nav .nav-btn.active { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; }
+        .sub-nav .nav-btn:not(.active) { background: #f0f0f0; color: #636e72; }
+        .sub-nav .nav-btn:hover:not(.active) { background: #e0e0e0; }
+        .form-label { font-weight: 600; color: #2d3436; margin-bottom: 8px; }
+        .form-control, .form-select { border: 2px solid #e0e0e0; border-radius: 10px; padding: 10px 15px; transition: all 0.3s ease; }
+        .form-control:focus, .form-select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        .modern-table thead { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); }
+        .modern-table thead th { color: white; font-weight: 600; padding: 10px 12px; font-size: 0.8rem; text-transform: uppercase; border: none; }
+        .modern-table tbody tr { transition: all 0.3s ease; border-bottom: 1px solid #e0e0e0; }
+        .modern-table tbody tr:hover { background: #f8f9fa; }
+        .modern-table tbody td { padding: 10px 12px; vertical-align: middle; font-size: 0.85rem; }
+        .btn-action { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s ease; border: none; cursor: pointer; }
+        .btn-action.btn-add { background: linear-gradient(135deg, #56ab2f, #a8e063); color: white; }
+        .btn-action.btn-remove { background: linear-gradient(135deg, #ff416c, #ff4b2b); color: white; }
+        .btn-action:hover { transform: translateY(-2px); }
+        .btn-submit { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border: none; padding: 15px 30px; font-weight: 600; border-radius: 10px; color: white; width: 100%; font-size: 1.1rem; }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102,126,234,0.4); color: white; }
+        .items-table { margin-top: 15px; }
+        .items-table input { border: 1px solid #e0e0e0; border-radius: 5px; padding: 5px 8px; width: 70px; text-align: center; }
+        .items-table .borrar { background: #ff4757; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; }
+        .total-display { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; padding: 15px 20px; border-radius: 10px; margin: 15px 0; display: flex; justify-content: space-between; align-items: center; }
+        .total-display strong { font-size: 1.2rem; }
+        .total-display input { background: transparent; border: none; color: white; font-size: 1.5rem; font-weight: 700; width: 120px; text-align: right; }
+        .dataTables_wrapper .dataTables_filter input { border: 2px solid #e0e0e0; border-radius: 8px; padding: 8px 15px; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important; color: white !important; border: none !important; border-radius: 8px; }
+        @media (max-width: 1200px) { .content-container { flex-direction: column; } .side-panel { width: 100%; } }
+        @media (max-width: 768px) { .sidebar { width: var(--sidebar-collapsed-width); } .main-content { margin-left: var(--sidebar-collapsed-width); } .sidebar-menu span { display: none; } }
+    </style>
 </head>
 
 <body class="mobile dashboard">
