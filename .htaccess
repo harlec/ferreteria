@@ -1,0 +1,26 @@
+# Redirigir todo el tráfico al directorio public/
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirigir a public/ si no es un archivo/directorio existente
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ public/$1 [L]
+
+    # Si acceden directamente a la raíz, ir a public/
+    RewriteCond %{REQUEST_URI} ^/$
+    RewriteRule ^$ public/index.php [L]
+</IfModule>
+
+# Denegar acceso a archivos sensibles
+<FilesMatch "^(autoload\.php|README\.md)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Denegar acceso a directorios sensibles
+<DirectoryMatch "^(app|config|core|vendor|storage|legacy|inc)/">
+    Order allow,deny
+    Deny from all
+</DirectoryMatch>
