@@ -8,37 +8,37 @@ abstract class Model
     /**
      * Nombre de la tabla en la base de datos
      */
-    protected static string $table = '';
+    protected static $table = '';
 
     /**
      * Clave primaria de la tabla
      */
-    protected static string $primaryKey = 'id';
+    protected static $primaryKey = 'id';
 
     /**
      * Campos que se pueden asignar masivamente
      */
-    protected static array $fillable = [];
+    protected static $fillable = [];
 
     /**
      * Reglas de validación
      */
-    protected static array $rules = [];
+    protected static $rules = [];
 
     /**
      * Atributos del modelo
      */
-    protected array $attributes = [];
+    protected $attributes = [];
 
     /**
      * Atributos originales (antes de cambios)
      */
-    protected array $original = [];
+    protected $original = [];
 
     /**
      * Obtener instancia de SDBA para la tabla
      */
-    public static function query(): Sdba
+    public static function query()
     {
         return Sdba::table(static::$table);
     }
@@ -46,25 +46,29 @@ abstract class Model
     /**
      * Obtener todos los registros
      */
-    public static function all(): array
+    public static function all()
     {
         $records = static::query()->get();
-        return array_map(fn($record) => static::hydrate($record), $records);
+        return array_map(function($record) {
+            return static::hydrate($record);
+        }, $records);
     }
 
     /**
      * Obtener registros con límite y offset
      */
-    public static function paginate(int $limit = 10, int $offset = 0): array
+    public static function paginate($limit = 10, $offset = 0)
     {
         $records = static::query()->get($limit, $offset);
-        return array_map(fn($record) => static::hydrate($record), $records);
+        return array_map(function($record) {
+            return static::hydrate($record);
+        }, $records);
     }
 
     /**
      * Buscar por ID
      */
-    public static function find(int $id): ?static
+    public static function find($id)
     {
         $record = static::query()
             ->where(static::$primaryKey, $id)
@@ -76,7 +80,7 @@ abstract class Model
     /**
      * Buscar por ID o lanzar excepción
      */
-    public static function findOrFail(int $id): static
+    public static function findOrFail($id)
     {
         $model = static::find($id);
 
@@ -90,7 +94,7 @@ abstract class Model
     /**
      * Buscar con condición WHERE
      */
-    public static function where(string $field, $value, string $operator = '='): array
+    public static function where($field, $value, $operator = '=')
     {
         $query = static::query();
 
@@ -101,13 +105,15 @@ abstract class Model
         }
 
         $records = $query->get();
-        return array_map(fn($record) => static::hydrate($record), $records);
+        return array_map(function($record) {
+            return static::hydrate($record);
+        }, $records);
     }
 
     /**
      * Buscar primer registro con condición
      */
-    public static function whereFirst(string $field, $value): ?static
+    public static function whereFirst($field, $value)
     {
         $record = static::query()
             ->where($field, $value)
@@ -119,19 +125,21 @@ abstract class Model
     /**
      * Buscar con LIKE
      */
-    public static function whereLike(string $field, string $value): array
+    public static function whereLike($field, $value)
     {
         $records = static::query()
             ->like($field, $value)
             ->get();
 
-        return array_map(fn($record) => static::hydrate($record), $records);
+        return array_map(function($record) {
+            return static::hydrate($record);
+        }, $records);
     }
 
     /**
      * Crear nuevo registro
      */
-    public static function create(array $data): ?static
+    public static function create($data)
     {
         $filtered = static::filterFillable($data);
 
@@ -151,7 +159,7 @@ abstract class Model
     /**
      * Actualizar registro existente
      */
-    public function update(array $data): bool
+    public function update($data)
     {
         $filtered = static::filterFillable($data);
         $id = $this->getId();
@@ -173,7 +181,7 @@ abstract class Model
     /**
      * Eliminar registro
      */
-    public function delete(): bool
+    public function delete()
     {
         $id = $this->getId();
 
@@ -191,7 +199,7 @@ abstract class Model
     /**
      * Eliminar por ID (estático)
      */
-    public static function destroy(int $id): bool
+    public static function destroy($id)
     {
         static::query()
             ->where(static::$primaryKey, $id)
@@ -203,7 +211,7 @@ abstract class Model
     /**
      * Contar registros
      */
-    public static function count(): int
+    public static function count()
     {
         return static::query()->total();
     }
@@ -211,7 +219,7 @@ abstract class Model
     /**
      * Contar con condición
      */
-    public static function countWhere(string $field, $value): int
+    public static function countWhere($field, $value)
     {
         return static::query()
             ->where($field, $value)
@@ -221,7 +229,7 @@ abstract class Model
     /**
      * Verificar si existe un registro
      */
-    public static function exists(string $field, $value): bool
+    public static function exists($field, $value)
     {
         return static::whereFirst($field, $value) !== null;
     }
@@ -229,7 +237,7 @@ abstract class Model
     /**
      * Obtener como lista clave-valor (para selects)
      */
-    public static function getList(string $keyField, string $valueField): array
+    public static function getList($keyField, $valueField)
     {
         return static::query()->get_list($keyField, $valueField);
     }
@@ -237,7 +245,7 @@ abstract class Model
     /**
      * Hidratar modelo desde array de BD
      */
-    protected static function hydrate(array $record): static
+    protected static function hydrate($record)
     {
         $model = new static();
         $model->attributes = $record;
@@ -248,7 +256,7 @@ abstract class Model
     /**
      * Filtrar solo campos fillable
      */
-    protected static function filterFillable(array $data): array
+    protected static function filterFillable($data)
     {
         if (empty(static::$fillable)) {
             return $data;
@@ -260,7 +268,7 @@ abstract class Model
     /**
      * Llenar atributos
      */
-    public function fill(array $data): self
+    public function fill($data)
     {
         $filtered = static::filterFillable($data);
         $this->attributes = array_merge($this->attributes, $filtered);
@@ -270,24 +278,24 @@ abstract class Model
     /**
      * Obtener ID del registro
      */
-    public function getId(): ?int
+    public function getId()
     {
-        $id = $this->attributes[static::$primaryKey] ?? null;
+        $id = isset($this->attributes[static::$primaryKey]) ? $this->attributes[static::$primaryKey] : null;
         return $id ? (int)$id : null;
     }
 
     /**
      * Acceso mágico a atributos (getter)
      */
-    public function __get(string $name)
+    public function __get($name)
     {
-        return $this->attributes[$name] ?? null;
+        return isset($this->attributes[$name]) ? $this->attributes[$name] : null;
     }
 
     /**
      * Acceso mágico a atributos (setter)
      */
-    public function __set(string $name, $value): void
+    public function __set($name, $value)
     {
         $this->attributes[$name] = $value;
     }
@@ -295,7 +303,7 @@ abstract class Model
     /**
      * Verificar si atributo existe
      */
-    public function __isset(string $name): bool
+    public function __isset($name)
     {
         return isset($this->attributes[$name]);
     }
@@ -303,7 +311,7 @@ abstract class Model
     /**
      * Convertir a array
      */
-    public function toArray(): array
+    public function toArray()
     {
         return $this->attributes;
     }
@@ -311,7 +319,7 @@ abstract class Model
     /**
      * Convertir a JSON
      */
-    public function toJson(): string
+    public function toJson()
     {
         return json_encode($this->attributes, JSON_UNESCAPED_UNICODE);
     }
@@ -319,7 +327,7 @@ abstract class Model
     /**
      * Obtener reglas de validación
      */
-    public static function getRules(): array
+    public static function getRules()
     {
         return static::$rules;
     }
@@ -327,7 +335,7 @@ abstract class Model
     /**
      * Obtener nombre de tabla
      */
-    public static function getTable(): string
+    public static function getTable()
     {
         return static::$table;
     }
@@ -335,7 +343,7 @@ abstract class Model
     /**
      * Obtener clave primaria
      */
-    public static function getPrimaryKey(): string
+    public static function getPrimaryKey()
     {
         return static::$primaryKey;
     }
@@ -343,7 +351,7 @@ abstract class Model
     /**
      * Verificar si el modelo tiene cambios
      */
-    public function isDirty(): bool
+    public function isDirty()
     {
         return $this->attributes !== $this->original;
     }
@@ -351,7 +359,7 @@ abstract class Model
     /**
      * Obtener cambios realizados
      */
-    public function getChanges(): array
+    public function getChanges()
     {
         $changes = [];
         foreach ($this->attributes as $key => $value) {
@@ -365,7 +373,7 @@ abstract class Model
     /**
      * Refrescar modelo desde BD
      */
-    public function refresh(): self
+    public function refresh()
     {
         $id = $this->getId();
         if ($id) {

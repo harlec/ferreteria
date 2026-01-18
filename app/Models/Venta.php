@@ -123,11 +123,14 @@ class Venta extends Model
      */
     public function getTipoNombre(): string
     {
-        return match($this->tipo) {
-            self::TIPO_CONTADO => 'Contado',
-            self::TIPO_CREDITO => 'Crédito',
-            default => 'Desconocido'
-        };
+        switch ($this->tipo) {
+            case self::TIPO_CONTADO:
+                return 'Contado';
+            case self::TIPO_CREDITO:
+                return 'Crédito';
+            default:
+                return 'Desconocido';
+        }
     }
 
     /**
@@ -135,11 +138,15 @@ class Venta extends Model
      */
     public function getFormaNombre(): string
     {
-        return match($this->forma) {
-            self::FORMA_EFECTIVO => 'Efectivo',
-            self::FORMA_TARJETA_DEBITO => 'Tarjeta Débito',
-            self::FORMA_TARJETA_CREDITO => 'Tarjeta Crédito',
-            default => 'Desconocido'
-        };
+        switch ($this->forma) {
+            case self::FORMA_EFECTIVO:
+                return 'Efectivo';
+            case self::FORMA_TARJETA_DEBITO:
+                return 'Tarjeta Débito';
+            case self::FORMA_TARJETA_CREDITO:
+                return 'Tarjeta Crédito';
+            default:
+                return 'Desconocido';
+        }
     }
 }

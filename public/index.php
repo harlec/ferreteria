@@ -4,6 +4,10 @@
  * Sistema de Ferretería
  */
 
+// Mostrar errores en desarrollo
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
 // Cargar autoloader
 require_once dirname(__DIR__) . '/autoload.php';
 
