@@ -18,24 +18,29 @@ foreach ($ventas_list as $value) {
 	$stock->where('producto',$value['id_producto']);
 	$stock->order_by('id_stock','desc');
 	$stockl = $stock->get_one();
-	$stocktt = isset($stockl['stockt']) ? $stockl['stockt'] : 0;
+	$stocktt = ($stockl && isset($stockl['stockt'])) ? $stockl['stockt'] : 0;
 
 	$marca = Sdba::table('marca');
 	$marca->where('id_marca',$value['marca']);
 	$marca1 = $marca->get_one();
-	$marcan = isset($marca1['marca']) ? $marca1['marca'] : '';
+	$marcan = ($marca1 && isset($marca1['marca'])) ? $marca1['marca'] : '';
+
+	$codigo_prod = isset($value['codigo_producto']) ? $value['codigo_producto'] : '';
+	$nom_prod = isset($value['nom_prod']) ? $value['nom_prod'] : '';
+	$codigo_unidad = isset($value['codigo']) ? $value['codigo'] : '';
+	$precio_venta = isset($value['precio_venta']) ? $value['precio_venta'] : 0;
 
 	$stockClass = ($stocktt <= 0) ? 'bg-danger' : (($stocktt <= 5) ? 'bg-warning' : 'bg-success');
 
-	$datos .='<div class="product-item" data-id="'.$value['id_producto'].'" data-nombre="'.htmlspecialchars($value['codigo_producto'].' '.$value['nom_prod'].' '.$marcan).'" data-unidad="'.$value['codigo'].'" data-stock="'.$stocktt.'" data-precio="'.$value['precio_venta'].'">
+	$datos .='<div class="product-item" data-id="'.$value['id_producto'].'" data-nombre="'.htmlspecialchars($codigo_prod.' '.$nom_prod.' '.$marcan).'" data-unidad="'.htmlspecialchars($codigo_unidad).'" data-stock="'.$stocktt.'" data-precio="'.$precio_venta.'">
 		<div class="product-info">
-			<div class="product-name">'.htmlspecialchars($value['codigo_producto'].' '.$value['nom_prod']).'</div>
+			<div class="product-name">'.htmlspecialchars($codigo_prod.' '.$nom_prod).'</div>
 			<div class="product-meta">
-				<span class="badge bg-secondary">'.$value['codigo'].'</span>
+				<span class="badge bg-secondary">'.htmlspecialchars($codigo_unidad).'</span>
 				<span class="badge '.$stockClass.'">Stock: '.$stocktt.'</span>
 			</div>
 		</div>
-		<div class="product-price">S/ '.number_format($value['precio_venta'], 2).'</div>
+		<div class="product-price">S/ '.number_format($precio_venta, 2).'</div>
 		<button type="button" class="btn-add-product"><i class="fas fa-plus"></i></button>
 	</div>';
 }
