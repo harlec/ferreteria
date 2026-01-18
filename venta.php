@@ -18,14 +18,14 @@ foreach ($ventas_list as $value) {
 	$stock->where('producto',$value['id_producto']);
 	$stock->order_by('id_stock','desc');
 	$stockl = $stock->get_one();
-	$stocktt = $stockl['stockt'];
+	$stocktt = isset($stockl['stockt']) ? $stockl['stockt'] : 0;
 
 	$marca = Sdba::table('marca');
 	$marca->where('id_marca',$value['marca']);
 	$marca1 = $marca->get_one();
-	$marcan = $marca1['marca'];
+	$marcan = isset($marca1['marca']) ? $marca1['marca'] : '';
 
-	$stockClass = ($stocktt <= 0) ? 'text-danger' : (($stocktt <= 5) ? 'text-warning' : 'text-success');
+	$stockClass = ($stocktt <= 0) ? 'bg-danger' : (($stocktt <= 5) ? 'bg-warning' : 'bg-success');
 
 	$datos .='<div class="product-item" data-id="'.$value['id_producto'].'" data-nombre="'.htmlspecialchars($value['codigo_producto'].' '.$value['nom_prod'].' '.$marcan).'" data-unidad="'.$value['codigo'].'" data-stock="'.$stocktt.'" data-precio="'.$value['precio_venta'].'">
 		<div class="product-info">
