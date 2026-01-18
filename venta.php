@@ -1,13 +1,12 @@
 <?php
-session_start();
+include('inc/control.php');
+include('inc/sdba/sdba.php');
+
 $usuario = $_SESSION['usuario'];
 $tienda = $_SESSION['tienda'];
-
-include('inc/control.php');
 $fecha = date('d-m-Y');
 $newDate = date("Y-m-d", strtotime($fecha));
 
-include('inc/sdba/sdba.php');
 $ventas = Sdba::table('productos');
 $ventas->left_join('unidad_prod','unidades','id_unidad');
 $ventas_list = $ventas->get();
