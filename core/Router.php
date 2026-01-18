@@ -3,13 +3,13 @@ namespace Core;
 
 class Router
 {
-    private array $routes = [];
-    private array $params = [];
+    private $routes = [];
+    private $params = [];
 
     /**
      * Registrar ruta GET
      */
-    public function get(string $uri, string $action, array $middleware = []): self
+    public function get($uri, $action, $middleware = [])
     {
         return $this->addRoute('GET', $uri, $action, $middleware);
     }
@@ -17,7 +17,7 @@ class Router
     /**
      * Registrar ruta POST
      */
-    public function post(string $uri, string $action, array $middleware = []): self
+    public function post($uri, $action, $middleware = [])
     {
         return $this->addRoute('POST', $uri, $action, $middleware);
     }
@@ -25,7 +25,7 @@ class Router
     /**
      * Agregar ruta al registro
      */
-    private function addRoute(string $method, string $uri, string $action, array $middleware): self
+    private function addRoute($method, $uri, $action, $middleware)
     {
         $this->routes[] = [
             'method'     => $method,
@@ -39,22 +39,19 @@ class Router
     /**
      * Cargar rutas desde array de configuración
      */
-    public function loadRoutes(array $routes): void
+    public function loadRoutes($routes)
     {
         foreach ($routes as $route) {
             $method = strtolower($route['method']);
-            $this->$method(
-                $route['uri'],
-                $route['action'],
-                $route['middleware'] ?? []
-            );
+            $middleware = isset($route['middleware']) ? $route['middleware'] : [];
+            $this->$method($route['uri'], $route['action'], $middleware);
         }
     }
 
     /**
      * Resolver la URI actual y encontrar la ruta correspondiente
      */
-    public function resolve(string $uri, string $method): ?array
+    public function resolve($uri, $method)
     {
         $uri = $this->normalizeUri($uri);
 
@@ -75,7 +72,7 @@ class Router
     /**
      * Verificar si la URI coincide con el patrón de ruta
      */
-    private function matchUri(string $routeUri, string $requestUri): bool
+    private function matchUri($routeUri, $requestUri)
     {
         $pattern = $this->uriToRegex($routeUri);
         return preg_match($pattern, $requestUri) === 1;
@@ -84,7 +81,7 @@ class Router
     /**
      * Convertir URI con parámetros a expresión regular
      */
-    private function uriToRegex(string $uri): string
+    private function uriToRegex($uri)
     {
         $pattern = preg_replace('/\{(\w+)\}/', '(?P<$1>[^/]+)', $uri);
         return '#^' . $pattern . '$#';
@@ -93,7 +90,7 @@ class Router
     /**
      * Extraer parámetros de la URI
      */
-    private function extractParams(string $routeUri, string $requestUri): array
+    private function extractParams($routeUri, $requestUri)
     {
         $pattern = $this->uriToRegex($routeUri);
         preg_match($pattern, $requestUri, $matches);
@@ -106,7 +103,7 @@ class Router
     /**
      * Obtener parámetros extraídos
      */
-    public function getParams(): array
+    public function getParams()
     {
         return $this->params;
     }
@@ -114,7 +111,7 @@ class Router
     /**
      * Normalizar URI (quitar slash inicial/final)
      */
-    private function normalizeUri(string $uri): string
+    private function normalizeUri($uri)
     {
         return '/' . trim($uri, '/');
     }
@@ -122,7 +119,7 @@ class Router
     /**
      * Obtener todas las rutas registradas
      */
-    public function getRoutes(): array
+    public function getRoutes()
     {
         return $this->routes;
     }

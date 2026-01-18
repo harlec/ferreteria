@@ -155,7 +155,7 @@ abstract class Controller
     /**
      * Obtener datos de entrada filtrados
      */
-    protected function input(string $key = null, $default = null)
+    protected function input(?string $key = null, mixed $default = null): mixed
     {
         return $this->request->input($key, $default);
     }

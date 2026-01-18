@@ -3,12 +3,12 @@ namespace Core;
 
 class App
 {
-    public Router $router;
-    public Request $request;
-    private array $config;
-    private array $middleware = [];
+    public $router;
+    public $request;
+    private $config;
+    private $middleware = [];
 
-    public function __construct(array $config = [])
+    public function __construct($config = [])
     {
         $this->config = $config;
         $this->router = new Router();
@@ -16,7 +16,8 @@ class App
 
         // Definir URL base
         if (!defined('BASE_URL')) {
-            define('BASE_URL', $config['base_url'] ?? '/');
+            $baseUrl = isset($config['base_url']) ? $config['base_url'] : '/';
+            define('BASE_URL', $baseUrl);
         }
 
         // Configurar timezone
@@ -25,7 +26,8 @@ class App
         }
 
         // Configurar errores
-        if ($config['debug'] ?? false) {
+        $debug = isset($config['debug']) ? $config['debug'] : false;
+        if ($debug) {
             error_reporting(E_ALL);
             ini_set('display_errors', '1');
         } else {
@@ -37,7 +39,7 @@ class App
     /**
      * Registrar middleware global
      */
-    public function registerMiddleware(string $name, string $class): void
+    public function registerMiddleware($name, $class)
     {
         $this->middleware[$name] = $class;
     }
@@ -45,7 +47,7 @@ class App
     /**
      * Ejecutar la aplicación
      */
-    public function run(): void
+    public function run()
     {
         $uri = $this->request->uri();
         $method = $this->request->method();
@@ -59,7 +61,8 @@ class App
         }
 
         // Ejecutar middleware
-        if (!$this->runMiddleware($route['middleware'] ?? [])) {
+        $middlewareList = isset($route['middleware']) ? $route['middleware'] : [];
+        if (!$this->runMiddleware($middlewareList)) {
             return;
         }
 
@@ -70,10 +73,10 @@ class App
     /**
      * Ejecutar middleware de la ruta
      */
-    private function runMiddleware(array $middlewareList): bool
+    private function runMiddleware($middlewareList)
     {
         foreach ($middlewareList as $name) {
-            $class = $this->middleware[$name] ?? null;
+            $class = isset($this->middleware[$name]) ? $this->middleware[$name] : null;
 
             if ($class === null) {
                 continue;
@@ -92,10 +95,12 @@ class App
     /**
      * Despachar la acción del controlador
      */
-    private function dispatch(string $action, array $params): void
+    private function dispatch($action, $params)
     {
         // Parsear Controller@method
-        [$controllerName, $method] = explode('@', $action);
+        $parts = explode('@', $action);
+        $controllerName = $parts[0];
+        $method = $parts[1];
 
         $controllerClass = "App\\Controllers\\{$controllerName}";
 
@@ -118,7 +123,7 @@ class App
     /**
      * Mostrar página 404
      */
-    private function notFound(): void
+    private function notFound()
     {
         http_response_code(404);
 
@@ -141,11 +146,12 @@ class App
     /**
      * Mostrar error
      */
-    private function error(string $message): void
+    private function error($message)
     {
         http_response_code(500);
 
-        if ($this->config['debug'] ?? false) {
+        $debug = isset($this->config['debug']) ? $this->config['debug'] : false;
+        if ($debug) {
             echo "<h1>Error</h1><p>{$message}</p>";
         } else {
             echo '<h1>Error del servidor</h1>';
@@ -155,8 +161,8 @@ class App
     /**
      * Obtener configuración
      */
-    public function config(string $key, $default = null)
+    public function config($key, $default = null)
     {
-        return $this->config[$key] ?? $default;
+        return isset($this->config[$key]) ? $this->config[$key] : $default;
     }
 }

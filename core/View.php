@@ -16,7 +16,7 @@ class View
     /**
      * Compartir datos globalmente con todas las vistas
      */
-    public function share(string $key, $value): void
+    public function share(string $key, mixed $value): void
     {
         $this->sharedData[$key] = $value;
     }
@@ -174,7 +174,7 @@ class View
     /**
      * Formatear número como moneda
      */
-    public function money($amount, int $decimals = 2): string
+    public function money(mixed $amount, int $decimals = 2): string
     {
         return 'S/ ' . number_format((float)$amount, $decimals, '.', ',');
     }

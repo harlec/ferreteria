@@ -39,130 +39,106 @@ class Validator
 
         $value = $this->data[$field] ?? null;
 
-        switch ($rule) {
-            case 'required':
-                if (empty($value) && $value !== '0') {
-                    $this->addError($field, 'El campo es requerido');
-                }
-                break;
+        match ($rule) {
+            'required' => empty($value) && $value !== '0'
+                ? $this->addError($field, 'El campo es requerido')
+                : null,
 
-            case 'email':
-                if (!empty($value) && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                    $this->addError($field, 'El email no es válido');
-                }
-                break;
+            'email' => !empty($value) && !filter_var($value, FILTER_VALIDATE_EMAIL)
+                ? $this->addError($field, 'El email no es válido')
+                : null,
 
-            case 'numeric':
-                if (!empty($value) && !is_numeric($value)) {
-                    $this->addError($field, 'El campo debe ser numérico');
-                }
-                break;
+            'numeric' => !empty($value) && !is_numeric($value)
+                ? $this->addError($field, 'El campo debe ser numérico')
+                : null,
 
-            case 'integer':
-                if (!empty($value) && !filter_var($value, FILTER_VALIDATE_INT)) {
-                    $this->addError($field, 'El campo debe ser un número entero');
-                }
-                break;
+            'integer' => !empty($value) && !filter_var($value, FILTER_VALIDATE_INT)
+                ? $this->addError($field, 'El campo debe ser un número entero')
+                : null,
 
-            case 'min':
-                if (!empty($value) && strlen($value) < (int)$params[0]) {
-                    $this->addError($field, "El campo debe tener al menos {$params[0]} caracteres");
-                }
-                break;
+            'min' => !empty($value) && strlen($value) < (int)$params[0]
+                ? $this->addError($field, "El campo debe tener al menos {$params[0]} caracteres")
+                : null,
 
-            case 'max':
-                if (!empty($value) && strlen($value) > (int)$params[0]) {
-                    $this->addError($field, "El campo no debe exceder {$params[0]} caracteres");
-                }
-                break;
+            'max' => !empty($value) && strlen($value) > (int)$params[0]
+                ? $this->addError($field, "El campo no debe exceder {$params[0]} caracteres")
+                : null,
 
-            case 'minValue':
-                if (!empty($value) && (float)$value < (float)$params[0]) {
-                    $this->addError($field, "El valor mínimo es {$params[0]}");
-                }
-                break;
+            'minValue' => !empty($value) && (float)$value < (float)$params[0]
+                ? $this->addError($field, "El valor mínimo es {$params[0]}")
+                : null,
 
-            case 'maxValue':
-                if (!empty($value) && (float)$value > (float)$params[0]) {
-                    $this->addError($field, "El valor máximo es {$params[0]}");
-                }
-                break;
+            'maxValue' => !empty($value) && (float)$value > (float)$params[0]
+                ? $this->addError($field, "El valor máximo es {$params[0]}")
+                : null,
 
-            case 'between':
-                if (!empty($value)) {
-                    $len = strlen($value);
-                    if ($len < (int)$params[0] || $len > (int)$params[1]) {
-                        $this->addError($field, "El campo debe tener entre {$params[0]} y {$params[1]} caracteres");
-                    }
-                }
-                break;
+            'between' => !empty($value) && (strlen($value) < (int)$params[0] || strlen($value) > (int)$params[1])
+                ? $this->addError($field, "El campo debe tener entre {$params[0]} y {$params[1]} caracteres")
+                : null,
 
-            case 'regex':
-                if (!empty($value) && !preg_match($params[0], $value)) {
-                    $this->addError($field, 'El formato del campo no es válido');
-                }
-                break;
+            'regex' => !empty($value) && !preg_match($params[0], $value)
+                ? $this->addError($field, 'El formato del campo no es válido')
+                : null,
 
-            case 'date':
-                if (!empty($value) && !strtotime($value)) {
-                    $this->addError($field, 'La fecha no es válida');
-                }
-                break;
+            'date' => !empty($value) && !strtotime($value)
+                ? $this->addError($field, 'La fecha no es válida')
+                : null,
 
-            case 'in':
-                if (!empty($value) && !in_array($value, $params)) {
-                    $this->addError($field, 'El valor seleccionado no es válido');
-                }
-                break;
+            'in' => !empty($value) && !in_array($value, $params)
+                ? $this->addError($field, 'El valor seleccionado no es válido')
+                : null,
 
-            case 'confirmed':
-                $confirmField = $field . '_confirmation';
-                if ($value !== ($this->data[$confirmField] ?? null)) {
-                    $this->addError($field, 'La confirmación no coincide');
-                }
-                break;
+            'confirmed' => $value !== ($this->data[$field . '_confirmation'] ?? null)
+                ? $this->addError($field, 'La confirmación no coincide')
+                : null,
 
-            case 'unique':
-                // unique:tabla,columna
-                if (!empty($value) && count($params) >= 2) {
-                    $exists = \Sdba::table($params[0])
-                        ->where($params[1], $value)
-                        ->get_one();
-                    if ($exists) {
-                        $this->addError($field, 'El valor ya existe');
-                    }
-                }
-                break;
+            'unique' => $this->validateUnique($field, $value, $params),
 
-            case 'exists':
-                // exists:tabla,columna
-                if (!empty($value) && count($params) >= 2) {
-                    $exists = \Sdba::table($params[0])
-                        ->where($params[1], $value)
-                        ->get_one();
-                    if (!$exists) {
-                        $this->addError($field, 'El valor no existe');
-                    }
-                }
-                break;
+            'exists' => $this->validateExists($field, $value, $params),
 
-            case 'dni':
-                if (!empty($value) && !preg_match('/^\d{8}$/', $value)) {
-                    $this->addError($field, 'El DNI debe tener 8 dígitos');
-                }
-                break;
+            'dni' => !empty($value) && !preg_match('/^\d{8}$/', $value)
+                ? $this->addError($field, 'El DNI debe tener 8 dígitos')
+                : null,
 
-            case 'ruc':
-                if (!empty($value) && !preg_match('/^\d{11}$/', $value)) {
-                    $this->addError($field, 'El RUC debe tener 11 dígitos');
-                }
-                break;
+            'ruc' => !empty($value) && !preg_match('/^\d{11}$/', $value)
+                ? $this->addError($field, 'El RUC debe tener 11 dígitos')
+                : null,
 
-            case 'phone':
-                if (!empty($value) && !preg_match('/^\d{9}$/', $value)) {
-                    $this->addError($field, 'El teléfono debe tener 9 dígitos');
-                }
-                break;
+            'phone' => !empty($value) && !preg_match('/^\d{9}$/', $value)
+                ? $this->addError($field, 'El teléfono debe tener 9 dígitos')
+                : null,
+
+            default => null,
+        };
+    }
+
+    /**
+     * Validar unicidad en base de datos
+     */
+    private function validateUnique(string $field, mixed $value, array $params): void
+    {
+        if (!empty($value) && count($params) >= 2) {
+            $exists = \Sdba::table($params[0])
+                ->where($params[1], $value)
+                ->get_one();
+            if ($exists) {
+                $this->addError($field, 'El valor ya existe');
+            }
+        }
+    }
+
+    /**
+     * Validar existencia en base de datos
+     */
+    private function validateExists(string $field, mixed $value, array $params): void
+    {
+        if (!empty($value) && count($params) >= 2) {
+            $exists = \Sdba::table($params[0])
+                ->where($params[1], $value)
+                ->get_one();
+            if (!$exists) {
+                $this->addError($field, 'El valor no existe');
+            }
         }
     }
 

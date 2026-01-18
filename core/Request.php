@@ -35,7 +35,7 @@ class Request
     /**
      * Obtener valor de GET
      */
-    public function get(string $key = null, $default = null)
+    public function get(?string $key = null, mixed $default = null): mixed
     {
         if ($key === null) {
             return $this->get;
@@ -46,7 +46,7 @@ class Request
     /**
      * Obtener valor de POST
      */
-    public function post(string $key = null, $default = null)
+    public function post(?string $key = null, mixed $default = null): mixed
     {
         if ($key === null) {
             return $this->post;
@@ -57,7 +57,7 @@ class Request
     /**
      * Obtener valor de cualquier método (GET o POST)
      */
-    public function input(string $key = null, $default = null)
+    public function input(?string $key = null, mixed $default = null): mixed
     {
         if ($key === null) {
             return array_merge($this->get, $this->post);
@@ -188,7 +188,7 @@ class Request
     /**
      * Obtener header específico
      */
-    public function header(string $key, $default = null): ?string
+    public function header(string $key, mixed $default = null): ?string
     {
         $key = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
         return $this->server[$key] ?? $default;
