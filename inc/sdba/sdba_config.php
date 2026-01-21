@@ -2,8 +2,8 @@
 
 class Sdba_config
 {
-    public static $dbname = 'admin_ferrew'; // Your database name
-    public static $dbuser = 'admin_ferrew'; // Your database username
+    public static $dbname = 'admin_ferresys'; // Your database name
+    public static $dbuser = 'admin_ferresys'; // Your database username
     public static $dbpass = 'ikm169uhn'; // // Your database password
     public static $dbhost = 'localhost'; // Your database host, 'localhost' is default.
     public static $dbencoding = 'utf8'; // Your database encoding, default is 'utf8'. Do not change, if not sure.
