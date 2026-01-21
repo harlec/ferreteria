@@ -5,25 +5,11 @@ if ($_SESSION['type']=='operador') {
 }
 
 include('inc/sdba/sdba.php'); // include main file
-
-// Consulta optimizada con todos los JOINs incluyendo el último stock
-$sql = "SELECT p.*,
-		c.nom_cat,
-		m.marca,
-		co.color,
-		u.nombre as unidad_nombre,
-		s.stock,
-		s.stockt
-	FROM productos p
-	LEFT JOIN categorias c ON p.categoria = c.id_categoria
-	LEFT JOIN marca m ON p.marca = m.id_marca
-	LEFT JOIN color co ON p.color = co.id_color
-	LEFT JOIN unidades u ON p.unidad_prod = u.id_unidad
-	LEFT JOIN stock s ON s.id_stock = (
-		SELECT MAX(id_stock) FROM stock WHERE producto = p.id_producto
-	)";
-
-$ventas_list = Sdba::db()->query($sql)->result();
+$ventas = Sdba::table('productos');
+$ventas->left_join('categoria','categorias','id_categoria');
+$ventas->left_join('marca','marca','id_marca');
+$ventas->left_join('color','color','id_color');
+$ventas_list = $ventas->get();
 
 $datos = '';
 $i = 1;
@@ -31,13 +17,18 @@ foreach ($ventas_list as $value) {
 
 	$marcan = $value['marca'];
 	$colorn = $value['color'];
-	$unidadn = $value['unidad_nombre'];
-	$stockt = (int)$value['stockt'];
-
+	$stockt = $value['stockp'];
 	$col = '';
 	if($stockt<=4){
 		$col = 'style="color:red"';
 	}
+
+	//unidades
+	$unidad = Sdba::table('unidades');
+	$unidad->where('id_unidad',$value['unidad_prod']);
+	//$unidad->order_by('id_stock','desc');
+	$unidad1 = $unidad->get_one();
+	$unidadn = $unidad1['nombre'];
 
 	
 
