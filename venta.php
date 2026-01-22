@@ -248,7 +248,6 @@ foreach ($el as $value) {
 				{ title: "Código" },
 				{ title: "Producto" },
 				{ title: "Unidad" },
-				{ title: "Lote" },
 				{ title: "Stock" },
 				{ title: "Precio" },
 				{ title: "", orderable: false, searchable: false }
