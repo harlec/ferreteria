@@ -8,40 +8,6 @@ $fecha = date('d-m-Y');
 $newDate = date("Y-m-d", strtotime($fecha));
 
 include('inc/sdba/sdba.php'); // include main file
-$ventas = Sdba::table('productos');
-$ventas->left_join('unidad_prod','unidades','id_unidad'); // creating table object
-$ventas_list = $ventas->get(); 
-
-$datos = '';
-$i = 1;
-foreach ($ventas_list as $value) {
-
-	$stock = Sdba::table('stock');
-	$stock->where('producto',$value['id_producto']);
-	$stock->order_by('id_stock','desc');
-	$stockl = $stock->get_one();
-	$stocktt = $stockl['stockt'];
-
-	$marca = Sdba::table('marca');
-	$marca->where('id_marca',$value['marca']);
-	//$marca->order_by('id_stock','desc');
-	$marca1 = $marca->get_one();
-	$marcan = $marca1['marca'];
-
-	
-		$datos .='<tr> 
-    			<td style="text-transform:uppercase;" class="nom_prod">'.$value['codigo_producto'].' '.$value['nom_prod'].' '.$marcan.'</td>
-    			<td style="text-transform:uppercase;" class="unidad">'.$value['codigo'].'</td>
-    			<td style="text-transform:uppercase;" class="fv">-</td>
-    			<td class="stock">'.$stocktt.'</td>
-    			<td class="precio_venta">'.$value['precio_venta'].'</td>  
-    			<td><button id="agregar" value="'.$value['id_producto'].'" class="btn btn-xs btn-success"> + </button></td>
-    		  </tr>';
-	
-
-	
-    $i++;
-}
 
 //obtnemos colaboradores
 $clientes = Sdba::table('clientes');
@@ -203,9 +169,7 @@ foreach ($el as $value) {
 					    			<th></th> 
 					    		</tr> 
 					    	</thead> 
-					    	<tbody> 
-					    		<?php echo $datos; ?>
-					    	</tbody> 
+					    	<tbody></tbody> 
 					    </table>
 					</div>
 				</div>
@@ -274,7 +238,22 @@ foreach ($el as $value) {
 		    }           
 		} );     
 
-		$('#datos').DataTable();
+		$('#datos').DataTable({
+			processing: true,
+			serverSide: true,
+			ajax: {
+				url: '/inc/venta_ajax.php',
+				type: 'GET'
+			},
+			columns: [
+				{ title: "Producto" },
+				{ title: "Unidad" },
+				{ title: "Lote" },
+				{ title: "Stock" },
+				{ title: "Precio" },
+				{ title: "", orderable: false, searchable: false }
+			]
+		});
 
 
 		var total = 0;
