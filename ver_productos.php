@@ -3,51 +3,6 @@ include('inc/control.php');
 if ($_SESSION['type']=='operador') {
 	header("Location: dashboard.php");
 }
-
-include('inc/sdba/sdba.php'); // include main file
-$ventas = Sdba::table('productos');
-$ventas->left_join('categoria','categorias','id_categoria');
-$ventas->left_join('marca','marca','id_marca');
-$ventas->left_join('color','color','id_color');
-$ventas_list = $ventas->get();
-
-$datos = '';
-$i = 1;
-foreach ($ventas_list as $value) {
-
-	$marcan = $value['marca'];
-	$colorn = $value['color'];
-	$stockt = $value['stockp'];
-	$col = '';
-	if($stockt<=4){
-		$col = 'style="color:red"';
-	}
-
-	//unidades
-	$unidad = Sdba::table('unidades');
-	$unidad->where('id_unidad',$value['unidad_prod']);
-	//$unidad->order_by('id_stock','desc');
-	$unidad1 = $unidad->get_one();
-	$unidadn = $unidad1['nombre'];
-
-	
-
-	$datos .='<tr '.$col.'><td>'.$value['id_producto'].'</td> 
-				<td>'.$value['codigo_producto'].'</td> 
-    			<td style="text-transform:uppercase;">'.$value['nom_prod'].'</td>
-    			<td>'.$unidadn.'</td>
-    			<td>'.$marcan.'</td>
-    			<td>'.$value['nom_cat'].'</td>
-    			<td>'.$colorn.'</td>
-    			<td>'.$value['exonerada'].'</td>
-    			<td>'.$stockt.'</td> 
-    			<td>'.$value['precio_venta'].'</td> 
-    			<td><a class="" alt="ver" href="editar_producto.php?id='.$value['id_producto'].'"><img src="assets/img/edit.png"/></a><button class="btn-custom" id="borrar" value="'.$value['id_producto'].'" alt="boleta"><img src="assets/img/trash.png" /></button></td> 
-    		  </tr>';
-    $i++;
-}
-
-
 ?>
 
 
@@ -128,9 +83,7 @@ foreach ($ventas_list as $value) {
 											    			<th>Opciones</th> 
 											    		</tr> 
 											    	</thead> 
-											    	<tbody> 
-											    		<?php echo $datos; ?>
-											    	</tbody> 
+											    	<tbody></tbody> 
 											    </table>
 											</div>
 										</div>
@@ -211,10 +164,30 @@ foreach ($ventas_list as $value) {
 		    }           
 		} );     
 
-		$('#datos').DataTable();	
+		$('#datos').DataTable({
+			processing: true,
+			serverSide: true,
+			ajax: {
+				url: '/inc/productos_ajax.php',
+				type: 'GET'
+			},
+			columns: [
+				{ title: "Id" },
+				{ title: "Codigo" },
+				{ title: "Producto" },
+				{ title: "Unidad" },
+				{ title: "Marca" },
+				{ title: "Categoría" },
+				{ title: "Color" },
+				{ title: "Exonerada Igv" },
+				{ title: "Stock" },
+				{ title: "Precio" },
+				{ title: "Opciones", orderable: false, searchable: false }
+			]
+		});
 	    console.log( "ready!" );
 
-	    $('body').on('click',"#borrar", function() {
+	    $('body').on('click',".btn-borrar", function() {
 			var id = $(this).val();
 			var str1 = 'id=' + id;
 		  	$.ajax({	
