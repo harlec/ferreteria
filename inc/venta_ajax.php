@@ -12,11 +12,12 @@ $orderDir = isset($_GET['order'][0]['dir']) && $_GET['order'][0]['dir'] === 'des
 
 // Mapeo de columnas para ORDER BY
 $columnsOrder = [
-    0 => 'p.nom_prod',
-    1 => 'u.codigo',
-    2 => 'p.id_producto',
-    3 => 'p.stockp',
-    4 => 'p.precio_venta'
+    0 => 'p.codigo_producto',
+    1 => 'p.nom_prod',
+    2 => 'u.codigo',
+    3 => 'p.id_producto',
+    4 => 'p.stockp',
+    5 => 'p.precio_venta'
 ];
 
 $db = Sdba::db();
@@ -70,10 +71,11 @@ $data = $db->query($sql)->result();
 $result = [];
 foreach ($data as $row) {
     $stockt = $row['stockp'];
-    $nombre_completo = $row['codigo_producto'].' '.$row['nom_prod'].' '.($row['marca_nombre'] ?? '');
+    $nombre_prod = $row['nom_prod'].' '.($row['marca_nombre'] ?? '');
 
     $result[] = [
-        '<span class="nom_prod" style="text-transform:uppercase;">'.$nombre_completo.'</span>',
+        '<span class="codigo">'.$row['codigo_producto'].'</span>',
+        '<span class="nom_prod" style="text-transform:uppercase;">'.$nombre_prod.'</span>',
         '<span class="unidad" style="text-transform:uppercase;">'.($row['unidad_codigo'] ?? '').'</span>',
         '<span class="fv">-</span>',
         '<span class="stock">'.$stockt.'</span>',

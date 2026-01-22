@@ -158,18 +158,19 @@ foreach ($el as $value) {
 				</div>
 				<div class="panel panel-default pa">
 					<div class="panel-body">
-					    <table id="datos" class="table table-hover table-responsive"> 
-					    	<thead> 
-					    		<tr> 
+					    <table id="datos" class="table table-hover table-responsive">
+					    	<thead>
+					    		<tr>
+					    			<th>Código</th>
 					    			<th>Producto</th>
 					    			<th>Unidad</th>
 					    			<th>Lote</th>
 					    			<th>Stock</th>
-					    			<th>Precio</th> 
-					    			<th></th> 
-					    		</tr> 
-					    	</thead> 
-					    	<tbody></tbody> 
+					    			<th>Precio</th>
+					    			<th></th>
+					    		</tr>
+					    	</thead>
+					    	<tbody></tbody>
 					    </table>
 					</div>
 				</div>
@@ -246,6 +247,7 @@ foreach ($el as $value) {
 				type: 'GET'
 			},
 			columns: [
+				{ title: "Código" },
 				{ title: "Producto" },
 				{ title: "Unidad" },
 				{ title: "Lote" },
