@@ -10,56 +10,72 @@ $search = isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
 $orderColumn = isset($_GET['order'][0]['column']) ? (int)$_GET['order'][0]['column'] : 0;
 $orderDir = isset($_GET['order'][0]['dir']) && $_GET['order'][0]['dir'] === 'desc' ? 'desc' : 'asc';
 
-// Mapeo de columnas
-$columns = [
-    0 => 'id_producto',
-    1 => 'codigo_producto',
-    2 => 'nom_prod',
-    3 => 'nombre',
-    4 => 'marca',
-    5 => 'nom_cat',
-    6 => 'color',
-    7 => 'exonerada',
-    8 => 'stockp',
-    9 => 'precio_venta'
+// Mapeo de columnas para ORDER BY
+$columnsOrder = [
+    0 => 'p.id_producto',
+    1 => 'p.codigo_producto',
+    2 => 'p.nom_prod',
+    3 => 'u.nombre',
+    4 => 'm.marca',
+    5 => 'c.nom_cat',
+    6 => 'co.color',
+    7 => 'p.exonerada',
+    8 => 'p.stockp',
+    9 => 'p.precio_venta'
 ];
+
+$db = Sdba::db();
 
 // Total sin filtro
 $totalRecords = Sdba::table('productos')->total();
 
-// Consulta base
-$productos = Sdba::table('productos');
-$productos->left_join('categoria','categorias','id_categoria');
-$productos->left_join('marca','marca','id_marca');
-$productos->left_join('color','color','id_color');
-$productos->left_join('unidad_prod','unidades','id_unidad');
+// Escapar busqueda
+$searchEsc = $db->escape('%'.$search.'%', true);
 
-// Busqueda
+// WHERE para busqueda
+$whereSearch = '';
 if ($search != '') {
-    $productos->open_sub('AND');
-    $productos->like('nom_prod', $search, ['%','%'], 'productos', 'OR');
-    $productos->or_like('codigo_producto', $search, ['%','%'], 'productos');
-    $productos->or_like('marca', $search, ['%','%'], 'marca');
-    $productos->or_like('nom_cat', $search, ['%','%'], 'categorias');
-    $productos->close_sub();
+    $whereSearch = " WHERE (
+        p.nom_prod LIKE '{$searchEsc}' OR
+        p.codigo_producto LIKE '{$searchEsc}' OR
+        m.marca LIKE '{$searchEsc}' OR
+        c.nom_cat LIKE '{$searchEsc}' OR
+        co.color LIKE '{$searchEsc}' OR
+        u.nombre LIKE '{$searchEsc}'
+    )";
 }
 
-// Total filtrado
-$filteredRecords = $productos->total();
-
-// Ordenamiento
-if (isset($columns[$orderColumn])) {
-    $table = 'productos';
-    if ($columns[$orderColumn] == 'marca') $table = 'marca';
-    if ($columns[$orderColumn] == 'nom_cat') $table = 'categorias';
-    if ($columns[$orderColumn] == 'color') $table = 'color';
-    if ($columns[$orderColumn] == 'nombre') $table = 'unidades';
-
-    $productos->order_by($columns[$orderColumn], $orderDir, $table);
+// ORDER BY
+$orderBy = 'p.id_producto';
+if (isset($columnsOrder[$orderColumn])) {
+    $orderBy = $columnsOrder[$orderColumn];
 }
+$orderDir = ($orderDir === 'desc') ? 'DESC' : 'ASC';
 
-// Paginacion
-$data = $productos->get($length, $start);
+// Query para total filtrado
+$sqlCount = "SELECT COUNT(*) as total
+    FROM productos p
+    LEFT JOIN categorias c ON p.categoria = c.id_categoria
+    LEFT JOIN marca m ON p.marca = m.id_marca
+    LEFT JOIN color co ON p.color = co.id_color
+    LEFT JOIN unidades u ON p.unidad_prod = u.id_unidad
+    {$whereSearch}";
+
+$countResult = $db->query($sqlCount)->row();
+$filteredRecords = (int)$countResult['total'];
+
+// Query principal con paginacion
+$sql = "SELECT p.*, c.nom_cat, m.marca, co.color, u.nombre as unidad_nombre
+    FROM productos p
+    LEFT JOIN categorias c ON p.categoria = c.id_categoria
+    LEFT JOIN marca m ON p.marca = m.id_marca
+    LEFT JOIN color co ON p.color = co.id_color
+    LEFT JOIN unidades u ON p.unidad_prod = u.id_unidad
+    {$whereSearch}
+    ORDER BY {$orderBy} {$orderDir}
+    LIMIT {$start}, {$length}";
+
+$data = $db->query($sql)->result();
 
 // Formato de respuesta
 $result = [];
@@ -71,7 +87,7 @@ foreach ($data as $row) {
         '<span '.$stockClass.'>'.$row['id_producto'].'</span>',
         '<span '.$stockClass.'>'.$row['codigo_producto'].'</span>',
         '<span '.$stockClass.' style="text-transform:uppercase;">'.$row['nom_prod'].'</span>',
-        '<span '.$stockClass.'>'.($row['nombre'] ?? '').'</span>',
+        '<span '.$stockClass.'>'.($row['unidad_nombre'] ?? '').'</span>',
         '<span '.$stockClass.'>'.($row['marca'] ?? '').'</span>',
         '<span '.$stockClass.'>'.($row['nom_cat'] ?? '').'</span>',
         '<span '.$stockClass.'>'.($row['color'] ?? '').'</span>',
