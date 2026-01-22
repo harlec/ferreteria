@@ -77,7 +77,6 @@ foreach ($data as $row) {
         '<span class="codigo">'.$row['codigo_producto'].'</span>',
         '<span class="nom_prod" style="text-transform:uppercase;">'.$nombre_prod.'</span>',
         '<span class="unidad" style="text-transform:uppercase;">'.($row['unidad_codigo'] ?? '').'</span>',
-        '<span class="fv">-</span>',
         '<span class="stock">'.$stockt.'</span>',
         '<span class="precio_venta">'.$row['precio_venta'].'</span>',
         '<button id="agregar" value="'.$row['id_producto'].'" class="btn btn-xs btn-success"> + </button>'

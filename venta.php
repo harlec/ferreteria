@@ -122,7 +122,6 @@ foreach ($el as $value) {
 																		<th>Cantidad</th>
 																		<th>Descripción</th>
 																		<th>Unidad</th>
-																		<th>Lote</th>
 																		<th>Precio</th>
 																		<th>Monto</th>
 																		<th></th>
@@ -164,7 +163,6 @@ foreach ($el as $value) {
 					    			<th>Código</th>
 					    			<th>Producto</th>
 					    			<th>Unidad</th>
-					    			<th>Lote</th>
 					    			<th>Stock</th>
 					    			<th>Precio</th>
 					    			<th></th>
@@ -280,7 +278,7 @@ foreach ($el as $value) {
 		    	
 		    }
 		    else{
-		    	$('#items tr:last').after('<tr class="child"><input type="hidden" class="stocki" value="'+stock+'" name="stock[]" ><input type="hidden" value="'+id_p+'" name="id_pro[]" ><td><input class="cantidad" type="number" max="'+stock+'" value="'+cantidad+'" name="cantidad[]"></td><td style="text-transform:uppercase;">'+nombre+'</td><td style="text-transform:uppercase;">'+unidad+'</td><td><input name="fv[]" type="text" class="fv" value="'+fv+'" ></td><td><input type="number" class="pre" value="'+precio+'" name="precio[]"></td><td ><input class="mon" type="text" value="'+monto+'" name="total_pre[]" ></td><td><button value="'+monto+'" class="borrar">x</button></td></tr>');
+		    	$('#items tr:last').after('<tr class="child"><input type="hidden" class="stocki" value="'+stock+'" name="stock[]" ><input type="hidden" value="'+id_p+'" name="id_pro[]" ><td><input class="cantidad" type="number" max="'+stock+'" value="'+cantidad+'" name="cantidad[]"></td><td style="text-transform:uppercase;">'+nombre+'</td><td style="text-transform:uppercase;">'+unidad+'</td><td><input type="number" class="pre" value="'+precio+'" name="precio[]"></td><td ><input class="mon" type="text" value="'+monto+'" name="total_pre[]" ></td><td><button value="'+monto+'" class="borrar">x</button></td></tr>');
 		    	$("#total").val(total);
 
 		    }
