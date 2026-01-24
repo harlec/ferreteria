@@ -77,6 +77,9 @@ foreach ($ventas_list as $value) {
 		case '1': $forma = 'Efectivo'; break;
 		case '2': $forma = 'Tar. Debito'; break;
 		case '3': $forma = 'Tar. Crédito'; break;
+		case '4': $forma = 'Crédito'; break;
+		case '5': $forma = 'Yape'; break;
+		case '6': $forma = 'Tranferencia'; break;
 		default: $forma = ''; break;
 	}
 

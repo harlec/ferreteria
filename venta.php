@@ -116,6 +116,8 @@ if ($varios_row) {
 															    	<option value="2">Tar. Debito</option>
 															    	<option value="3">Tar. Credito</option>
 															    	<option value="4">Crédito</option>
+																	<option value="5">Yape></option>
+																	<option value="6">Transferencia</option>
 															    </select>
 											    		</div>
 											    		<div class="col-md-12">
