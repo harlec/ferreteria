@@ -162,31 +162,37 @@ foreach ($ventas_mes_list as $v) {
 				</div>
 				<div class="row">
 					<div class="col-md-4">
-						<div class="panel panel-default">
-							<div class="panel-body text-center">
-								<i class="fas fa-file-invoice fa-2x" style="color:#5bc0de;"></i>
-								<h4 style="margin:10px 0 5px;">S/ <?php echo number_format($boleta_total, 2); ?></h4>
-								<p style="color:#888; margin:0;">Boletas del mes (<?php echo $boleta_count; ?>)</p>
+						<a href="ventas.php?tipo_comp=B" style="text-decoration:none; color:inherit;">
+							<div class="panel panel-default" style="cursor:pointer;">
+								<div class="panel-body text-center">
+									<i class="fas fa-file-invoice fa-2x" style="color:#5bc0de;"></i>
+									<h4 style="margin:10px 0 5px;">S/ <?php echo number_format($boleta_total, 2); ?></h4>
+									<p style="color:#888; margin:0;">Boletas del mes (<?php echo $boleta_count; ?>)</p>
+								</div>
 							</div>
-						</div>
+						</a>
 					</div>
 					<div class="col-md-4">
-						<div class="panel panel-default">
-							<div class="panel-body text-center">
-								<i class="fas fa-file-invoice-dollar fa-2x" style="color:#5cb85c;"></i>
-								<h4 style="margin:10px 0 5px;">S/ <?php echo number_format($factura_total, 2); ?></h4>
-								<p style="color:#888; margin:0;">Facturas del mes (<?php echo $factura_count; ?>)</p>
+						<a href="ventas.php?tipo_comp=F" style="text-decoration:none; color:inherit;">
+							<div class="panel panel-default" style="cursor:pointer;">
+								<div class="panel-body text-center">
+									<i class="fas fa-file-invoice-dollar fa-2x" style="color:#5cb85c;"></i>
+									<h4 style="margin:10px 0 5px;">S/ <?php echo number_format($factura_total, 2); ?></h4>
+									<p style="color:#888; margin:0;">Facturas del mes (<?php echo $factura_count; ?>)</p>
+								</div>
 							</div>
-						</div>
+						</a>
 					</div>
 					<div class="col-md-4">
-						<div class="panel panel-default">
-							<div class="panel-body text-center">
-								<i class="fas fa-receipt fa-2x" style="color:#f0ad4e;"></i>
-								<h4 style="margin:10px 0 5px;">S/ <?php echo number_format($nota_total, 2); ?></h4>
-								<p style="color:#888; margin:0;">Nota de venta del mes (<?php echo $nota_count; ?>)</p>
+						<a href="ventas.php?tipo_comp=NV" style="text-decoration:none; color:inherit;">
+							<div class="panel panel-default" style="cursor:pointer;">
+								<div class="panel-body text-center">
+									<i class="fas fa-receipt fa-2x" style="color:#f0ad4e;"></i>
+									<h4 style="margin:10px 0 5px;">S/ <?php echo number_format($nota_total, 2); ?></h4>
+									<p style="color:#888; margin:0;">Nota de venta del mes (<?php echo $nota_count; ?>)</p>
+								</div>
 							</div>
-						</div>
+						</a>
 					</div>
 				</div>
 				<div class="row">

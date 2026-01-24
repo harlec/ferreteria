@@ -10,6 +10,12 @@ if ($_SESSION['type'] =='admin') {
 	$ventas->reset();
 	$ventas->where('estado !=','2');
 }
+// Filtro por mes si viene del dashboard
+$filtro_comp = isset($_GET['tipo_comp']) ? $_GET['tipo_comp'] : '';
+if ($filtro_comp) {
+	$mes_inicio = date("Y-m-01");
+	$ventas->and_where('fecha >=', $mes_inicio);
+}
 $ventas_list = $ventas->get();
 
 // Obtener todos los IDs de ventas para consultar comprobantes en una sola query
@@ -31,6 +37,23 @@ if (!empty($venta_ids)) {
 			$comprobantes_map[$c['venta']] = $c;
 		}
 	}
+}
+
+// Filtrar por tipo de comprobante si se solicita
+if ($filtro_comp) {
+	$ventas_filtradas = array();
+	foreach ($ventas_list as $v) {
+		$id_v = $v['id_venta'];
+		$tiene_comp = isset($comprobantes_map[$id_v]) ? $comprobantes_map[$id_v]['tipo'] : '';
+		if ($filtro_comp == 'B' && $tiene_comp == 'B') {
+			$ventas_filtradas[] = $v;
+		} elseif ($filtro_comp == 'F' && $tiene_comp == 'F') {
+			$ventas_filtradas[] = $v;
+		} elseif ($filtro_comp == 'NV' && ($tiene_comp != 'B' && $tiene_comp != 'F')) {
+			$ventas_filtradas[] = $v;
+		}
+	}
+	$ventas_list = $ventas_filtradas;
 }
 
 $filas = array();
@@ -124,7 +147,14 @@ $datos = implode('', $filas);
 		<div class="kbg">
 			<div class="cuerpofull">
 				<div class="titulo">
-					<h3>Ventas</h3>
+					<h3>Ventas<?php
+					if ($filtro_comp == 'B') echo ' - Boletas del mes';
+					elseif ($filtro_comp == 'F') echo ' - Facturas del mes';
+					elseif ($filtro_comp == 'NV') echo ' - Nota de venta del mes';
+					?></h3>
+					<?php if ($filtro_comp): ?>
+					<a href="ventas.php" class="btn btn-default btn-sm">Ver todas las ventas</a>
+					<?php endif; ?>
 				</div>
 				<div class="container-fluid">
 					<div class="row">
