@@ -10,62 +10,66 @@ if ($_SESSION['type'] =='admin') {
 	$ventas->reset();
 	$ventas->where('estado !=','2');
 }
-$ventas_list = $ventas->get(); 
+$ventas_list = $ventas->get();
 
-$datos = '';
+// Obtener todos los IDs de ventas para consultar comprobantes en una sola query
+$venta_ids = array();
+foreach ($ventas_list as $v) {
+	$venta_ids[] = $v['id_venta'];
+}
+
+// Consulta única de comprobantes para todas las ventas
+$comprobantes_map = array();
+if (!empty($venta_ids)) {
+	$comp = Sdba::table('comprobantes');
+	$comp->where_in('venta', $venta_ids);
+	$comp->order_by('id_comprobante','desc');
+	$comp_list = $comp->get();
+	foreach ($comp_list as $c) {
+		// Solo guardamos el primero (más reciente) por venta
+		if (!isset($comprobantes_map[$c['venta']])) {
+			$comprobantes_map[$c['venta']] = $c;
+		}
+	}
+}
+
+$filas = array();
 $i = 1;
-$total_dventa = 0;
 foreach ($ventas_list as $value) {
-
-	
-
-	$ocultar='';
+	$ocultar = '';
 	$comprobante = '';
 	$id = $value['id_venta'];
-	/*obtenemos total ventas*/
-	$deta_ventas = Sdba::table('detalle_ventas'); // creating table object
-	$deta_ventas->where('venta', $id);
-	$total_dventa = $deta_ventas->sum('total');
+	$total_dventa = $value['total'];
 
-	$ventas1 = Sdba::table('comprobantes'); // creating table object
-	$ventas1->where('venta', $id);
-	$ventas1->order_by('id_comprobante','desc');
-	$ventas_list1 = $ventas1->get_one();
-	
-	if ($value['estado']=='1') {
+	$ventas_list1 = isset($comprobantes_map[$id]) ? $comprobantes_map[$id] : null;
+
+	if ($value['estado']=='1' && $ventas_list1) {
 		$ocultar = 'ocultar';
 		$comprobante = '<a title="Ver comprobante" target="_BLANK" href="'.$ventas_list1['url'].'">'.$ventas_list1['tipo'].''.$ventas_list1['numero'].'</a>';
 	}
-	if ($value['tipo']=='1') {
-		$tipo = 'Contado';
-	}
-	else{
-		$tipo = 'Credito';
-	}
+
+	$tipo = ($value['tipo']=='1') ? 'Contado' : 'Credito';
+
 	switch ($value['forma']) {
-		case '1':
-			$forma = 'Efectivo';
-			break;
-		case '2':
-			$forma = 'Tar. Debito';
-			break;
-		case '3':
-			$forma = 'Tar. Crédito';
-			break;
+		case '1': $forma = 'Efectivo'; break;
+		case '2': $forma = 'Tar. Debito'; break;
+		case '3': $forma = 'Tar. Crédito'; break;
+		default: $forma = ''; break;
 	}
 
-	$datos .='<tr> 
-    			<th scope="row">'.$i.'</th> 
-    			<td>v-'.$value['id_venta'].'</td>
+	$filas[] = '<tr>
+    			<th scope="row">'.$i.'</th>
+    			<td>v-'.$id.'</td>
     			<td>'.$tipo.'</td>
     			<td>'.$forma.'</td>
-    			<td>'.$value['fecha'].'</td> 
-    			<td>'.$total_dventa.'</td> 
-    			<td>'.$comprobante.'</td> 
-    			<td><a title="Ver venta" class="btn btn-primary" title="ver" href="ver_venta.php?id='.$value['id_venta'].'"><i class="fas fa-eye"></i></a><a class="btn btn-success '.$ocultar.'" href="factura.php?id='.$value['id_venta'].'" title="factura electrónica"><i class="fas fa-file-invoice-dollar"></i></a><a class="btn btn-danger '.$ocultar.'" href="boleta.php?id='.$value['id_venta'].'" title="boleta electrónica"><i class="fab fa-bitcoin"></i></a><button class="btn-custom" id="borrar" value="'.$value['id_venta'].'" title="borrar"><img src="assets/img/trash.png" /></button></td> 
+    			<td>'.$value['fecha'].'</td>
+    			<td>'.$total_dventa.'</td>
+    			<td>'.$comprobante.'</td>
+    			<td><a title="Ver venta" class="btn btn-primary" href="ver_venta.php?id='.$id.'"><i class="fas fa-eye"></i></a><a class="btn btn-success '.$ocultar.'" href="factura.php?id='.$id.'" title="factura electrónica"><i class="fas fa-file-invoice-dollar"></i></a><a class="btn btn-danger '.$ocultar.'" href="boleta.php?id='.$id.'" title="boleta electrónica"><i class="fab fa-bitcoin"></i></a><button class="btn-custom" id="borrar" value="'.$id.'" title="borrar"><img src="assets/img/trash.png" /></button></td>
     		  </tr>';
-    $i++;
+	$i++;
 }
+$datos = implode('', $filas);
 
 
 ?>
