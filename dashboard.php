@@ -6,6 +6,7 @@ $hoy = date("Y-m-d");
 $mes_inicio = date("Y-m-01");
 
 $formas_nombre = array('1'=>'Efectivo','2'=>'Tar. Debito','3'=>'Tar. Crédito','4'=>'Crédito','5'=>'Yape','6'=>'Transferencia');
+$tipos_nombre = array('1'=>'Contado','2'=>'Crédito');
 
 // Ventas del día (estado != 2 = no anuladas)
 $v_dia = Sdba::table('ventas');
@@ -14,12 +15,20 @@ $ventas_dia_list = $v_dia->get();
 $ventas_dia_count = count($ventas_dia_list);
 $ventas_dia_total = 0;
 $dia_por_forma = array();
+$dia_forma_count = array();
+$dia_por_tipo = array();
+$dia_tipo_count = array();
 foreach ($ventas_dia_list as $v) {
 	$t = floatval($v['total']);
 	$ventas_dia_total += $t;
 	$f = $v['forma'];
-	if (!isset($dia_por_forma[$f])) $dia_por_forma[$f] = 0;
+	if (!isset($dia_por_forma[$f])) { $dia_por_forma[$f] = 0; $dia_forma_count[$f] = 0; }
 	$dia_por_forma[$f] += $t;
+	$dia_forma_count[$f]++;
+	$tp = $v['tipo'];
+	if (!isset($dia_por_tipo[$tp])) { $dia_por_tipo[$tp] = 0; $dia_tipo_count[$tp] = 0; }
+	$dia_por_tipo[$tp] += $t;
+	$dia_tipo_count[$tp]++;
 }
 
 // Ventas del mes
@@ -29,12 +38,20 @@ $ventas_mes_all = $v_mes->get();
 $ventas_mes_count = count($ventas_mes_all);
 $ventas_mes_total = 0;
 $mes_por_forma = array();
+$mes_forma_count = array();
+$mes_por_tipo = array();
+$mes_tipo_count = array();
 foreach ($ventas_mes_all as $v) {
 	$t = floatval($v['total']);
 	$ventas_mes_total += $t;
 	$f = $v['forma'];
-	if (!isset($mes_por_forma[$f])) $mes_por_forma[$f] = 0;
+	if (!isset($mes_por_forma[$f])) { $mes_por_forma[$f] = 0; $mes_forma_count[$f] = 0; }
 	$mes_por_forma[$f] += $t;
+	$mes_forma_count[$f]++;
+	$tp = $v['tipo'];
+	if (!isset($mes_por_tipo[$tp])) { $mes_por_tipo[$tp] = 0; $mes_tipo_count[$tp] = 0; }
+	$mes_por_tipo[$tp] += $t;
+	$mes_tipo_count[$tp]++;
 }
 
 // Total productos activos
@@ -144,12 +161,22 @@ foreach ($ventas_mes_all as $v) {
 								<h4 style="margin:10px 0 5px;">S/ <?php echo number_format($ventas_dia_total, 2); ?></h4>
 								<p style="color:#888; margin:0;">Ventas hoy (<?php echo $ventas_dia_count; ?>)</p>
 							</div>
-							<?php if (!empty($dia_por_forma)): ?>
-							<ul style="list-style:none; padding:0 15px 10px; margin:0; font-size:12px;">
-								<?php foreach ($dia_por_forma as $fk => $fv): ?>
+							<?php if (!empty($dia_por_tipo)): ?>
+							<ul style="list-style:none; padding:0 15px 5px; margin:0; font-size:12px;">
+								<?php foreach ($dia_por_tipo as $tk => $tv): ?>
 								<li style="display:flex; justify-content:space-between; padding:2px 0; border-top:1px solid #f0f0f0;">
-									<span><?php echo isset($formas_nombre[$fk]) ? $formas_nombre[$fk] : 'Otro'; ?></span>
-									<strong>S/ <?php echo number_format($fv, 2); ?></strong>
+									<span><?php echo isset($tipos_nombre[$tk]) ? $tipos_nombre[$tk] : 'Otro'; ?> (<?php echo $dia_tipo_count[$tk]; ?>)</span>
+									<strong>S/ <?php echo number_format($tv, 2); ?></strong>
+								</li>
+								<?php endforeach; ?>
+							</ul>
+							<?php endif; ?>
+							<?php if (!empty($dia_por_forma)): ?>
+							<ul style="list-style:none; padding:0 15px 10px; margin:0; font-size:11px; color:#666;">
+								<?php foreach ($dia_por_forma as $fk => $fv): ?>
+								<li style="display:flex; justify-content:space-between; padding:2px 0; border-top:1px solid #f5f5f5;">
+									<span><?php echo isset($formas_nombre[$fk]) ? $formas_nombre[$fk] : 'Otro'; ?> (<?php echo $dia_forma_count[$fk]; ?>)</span>
+									<span>S/ <?php echo number_format($fv, 2); ?></span>
 								</li>
 								<?php endforeach; ?>
 							</ul>
@@ -163,12 +190,22 @@ foreach ($ventas_mes_all as $v) {
 								<h4 style="margin:10px 0 5px;">S/ <?php echo number_format($ventas_mes_total, 2); ?></h4>
 								<p style="color:#888; margin:0;">Ventas del mes (<?php echo $ventas_mes_count; ?>)</p>
 							</div>
-							<?php if (!empty($mes_por_forma)): ?>
-							<ul style="list-style:none; padding:0 15px 10px; margin:0; font-size:12px;">
-								<?php foreach ($mes_por_forma as $fk => $fv): ?>
+							<?php if (!empty($mes_por_tipo)): ?>
+							<ul style="list-style:none; padding:0 15px 5px; margin:0; font-size:12px;">
+								<?php foreach ($mes_por_tipo as $tk => $tv): ?>
 								<li style="display:flex; justify-content:space-between; padding:2px 0; border-top:1px solid #f0f0f0;">
-									<span><?php echo isset($formas_nombre[$fk]) ? $formas_nombre[$fk] : 'Otro'; ?></span>
-									<strong>S/ <?php echo number_format($fv, 2); ?></strong>
+									<span><?php echo isset($tipos_nombre[$tk]) ? $tipos_nombre[$tk] : 'Otro'; ?> (<?php echo $mes_tipo_count[$tk]; ?>)</span>
+									<strong>S/ <?php echo number_format($tv, 2); ?></strong>
+								</li>
+								<?php endforeach; ?>
+							</ul>
+							<?php endif; ?>
+							<?php if (!empty($mes_por_forma)): ?>
+							<ul style="list-style:none; padding:0 15px 10px; margin:0; font-size:11px; color:#666;">
+								<?php foreach ($mes_por_forma as $fk => $fv): ?>
+								<li style="display:flex; justify-content:space-between; padding:2px 0; border-top:1px solid #f5f5f5;">
+									<span><?php echo isset($formas_nombre[$fk]) ? $formas_nombre[$fk] : 'Otro'; ?> (<?php echo $mes_forma_count[$fk]; ?>)</span>
+									<span>S/ <?php echo number_format($fv, 2); ?></span>
 								</li>
 								<?php endforeach; ?>
 							</ul>
