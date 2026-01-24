@@ -8,7 +8,7 @@ $result = array();
 if (strlen($term) >= 1) {
 	$clientes = Sdba::table('clientes');
 	$clientes->where('estado', '1');
-	$clientes->where('cliente LIKE', '%'.$term.'%');
+	$clientes->where('cliente', '%'.$term.'%', false, false, 'AND', 'LIKE');
 	$lista = $clientes->get(10);
 
 	foreach ($lista as $c) {
