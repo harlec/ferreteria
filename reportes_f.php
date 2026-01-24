@@ -5,50 +5,82 @@ if ($_SESSION['type']=='operador') {
 }
 
 include('inc/sdba/sdba.php'); // include main file
-$ventas = Sdba::table('productos');
-$ventas->left_join('categoria','categorias','id_categoria'); // creating table object
-$ventas_list = $ventas->get(); 
+$fecha = $_POST['fechaini'];
 
-$datos = '';
+$ventas = Sdba::table('productos');
+$ventas->left_join('categoria','categorias','id_categoria');
+$ventas_list = $ventas->get();
+
+// Recolectar IDs para consultas batch
+$producto_ids = array();
+$marca_ids = array();
+$unidad_ids = array();
+foreach ($ventas_list as $v) {
+	$producto_ids[] = $v['id_producto'];
+	$marca_ids[] = $v['marca'];
+	$unidad_ids[] = $v['unidad_prod'];
+}
+
+// Consulta única de marcas
+$marcas_map = array();
+if (!empty($marca_ids)) {
+	$marca_q = Sdba::table('marca');
+	$marca_q->where_in('id_marca', array_unique($marca_ids));
+	$marca_list = $marca_q->get();
+	foreach ($marca_list as $m) {
+		$marcas_map[$m['id_marca']] = $m['marca'];
+	}
+}
+
+// Consulta única de unidades
+$unidades_map = array();
+if (!empty($unidad_ids)) {
+	$unidad_q = Sdba::table('unidades');
+	$unidad_q->where_in('id_unidad', array_unique($unidad_ids));
+	$unidad_list = $unidad_q->get();
+	foreach ($unidad_list as $u) {
+		$unidades_map[$u['id_unidad']] = $u['nombre'];
+	}
+}
+
+// Consulta única de stock (más reciente por producto con fecha <= seleccionada)
+$stock_map = array();
+if (!empty($producto_ids)) {
+	$stock_q = Sdba::table('stock');
+	$stock_q->where_in('producto', $producto_ids);
+	$stock_q->where('fecha <=', $fecha);
+	$stock_q->order_by('id_stock','desc');
+	$stock_list = $stock_q->get();
+	foreach ($stock_list as $s) {
+		// Solo guardamos el primero (más reciente) por producto
+		if (!isset($stock_map[$s['producto']])) {
+			$stock_map[$s['producto']] = $s;
+		}
+	}
+}
+
+$filas = array();
 $i = 1;
 foreach ($ventas_list as $value) {
+	$id_prod = $value['id_producto'];
+	$marcan = isset($marcas_map[$value['marca']]) ? $marcas_map[$value['marca']] : '';
+	$unidadn = isset($unidades_map[$value['unidad_prod']]) ? $unidades_map[$value['unidad_prod']] : '';
+	$stock1 = isset($stock_map[$id_prod]) ? $stock_map[$id_prod] : null;
+	$stockt = $stock1 ? $stock1['stockt'] : 0;
 
-	$marca = Sdba::table('marca');
-	$marca->where('id_marca',$value['marca']);
-	//$marca->order_by('id_stock','desc');
-	$marca1 = $marca->get_one();
-	$marcan = $marca1['marca'];
-	$fecha = $_POST['fechaini'];
-
-	$stockt = 0;
-	$stock = Sdba::table('stock');
-	$stock->where('producto',$value['id_producto'])->and_where('fecha <=',$fecha);
-	$stock->order_by('id_stock','desc');
-	$stock1 = $stock->get_one();
-	$stocks .='<tr><td>Tienda 1</td><td>'.$stock1['stock'].'</td></tr>';
-	$stockt = $stockt + $stock1['stockt'];
-
-	//unidades
-	$unidad = Sdba::table('unidades');
-	$unidad->where('id_unidad',$value['unidad_prod']);
-	//$unidad->order_by('id_stock','desc');
-	$unidad1 = $unidad->get_one();
-	$unidadn = $unidad1['nombre'];
-
-	
-
-	$datos .='<tr><td>'.$value['id_producto'].'</td> 
+	$filas[] = '<tr><td>'.$id_prod.'</td>
     			<td style="text-transform:uppercase;">'.$value['nom_prod'].'</td>
     			<td>'.$unidadn.'</td>
     			<td>'.$marcan.'</td>
     			<td>'.$value['nom_cat'].'</td>
     			<td>'.$value['exonerada'].'</td>
-    			<td>'.$stockt.'</td> 
-    			<td>'.$value['precio_venta'].'</td> 
-    			<td><a class="" alt="ver" href="editar_producto.php?id='.$value['id_producto'].'"><img src="assets/img/edit.png"/></a><button class="btn-custom" id="borrar" value="'.$value['id_producto'].'" alt="boleta"><img src="assets/img/trash.png" /></button></td> 
+    			<td>'.$stockt.'</td>
+    			<td>'.$value['precio_venta'].'</td>
+    			<td><a class="" alt="ver" href="editar_producto.php?id='.$id_prod.'"><img src="assets/img/edit.png"/></a><button class="btn-custom" id="borrar" value="'.$id_prod.'" alt="boleta"><img src="assets/img/trash.png" /></button></td>
     		  </tr>';
-    $i++;
+	$i++;
 }
+$datos = implode('', $filas);
 
 
 ?>
