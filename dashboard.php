@@ -5,17 +5,37 @@ include('inc/sdba/sdba.php');
 $hoy = date("Y-m-d");
 $mes_inicio = date("Y-m-01");
 
+$formas_nombre = array('1'=>'Efectivo','2'=>'Tar. Debito','3'=>'Tar. Crédito','4'=>'Crédito','5'=>'Yape','6'=>'Transferencia');
+
 // Ventas del día (estado != 2 = no anuladas)
 $v_dia = Sdba::table('ventas');
 $v_dia->where('fecha', $hoy)->and_where('estado !=', '2');
-$ventas_dia_count = $v_dia->total();
-$ventas_dia_total = $v_dia->sum('total');
+$ventas_dia_list = $v_dia->get();
+$ventas_dia_count = count($ventas_dia_list);
+$ventas_dia_total = 0;
+$dia_por_forma = array();
+foreach ($ventas_dia_list as $v) {
+	$t = floatval($v['total']);
+	$ventas_dia_total += $t;
+	$f = $v['forma'];
+	if (!isset($dia_por_forma[$f])) $dia_por_forma[$f] = 0;
+	$dia_por_forma[$f] += $t;
+}
 
 // Ventas del mes
 $v_mes = Sdba::table('ventas');
 $v_mes->where('fecha >=', $mes_inicio)->and_where('estado !=', '2');
-$ventas_mes_count = $v_mes->total();
-$ventas_mes_total = $v_mes->sum('total');
+$ventas_mes_all = $v_mes->get();
+$ventas_mes_count = count($ventas_mes_all);
+$ventas_mes_total = 0;
+$mes_por_forma = array();
+foreach ($ventas_mes_all as $v) {
+	$t = floatval($v['total']);
+	$ventas_mes_total += $t;
+	$f = $v['forma'];
+	if (!isset($mes_por_forma[$f])) $mes_por_forma[$f] = 0;
+	$mes_por_forma[$f] += $t;
+}
 
 // Total productos activos
 $prod = Sdba::table('productos');
@@ -39,16 +59,10 @@ for ($d = 6; $d >= 0; $d--) {
 	$chart_data[] = $total_d ? $total_d : 0;
 }
 
-// Desglose por tipo de comprobante (mes actual)
-$v_mes_q = Sdba::table('ventas');
-$v_mes_q->where('fecha >=', $mes_inicio)->and_where('estado !=', '2');
-$ventas_mes_list = $v_mes_q->get();
-
+// Desglose por tipo de comprobante (mes actual) - reutiliza $ventas_mes_all
 $venta_ids_mes = array();
-$ventas_por_id = array();
-foreach ($ventas_mes_list as $v) {
+foreach ($ventas_mes_all as $v) {
 	$venta_ids_mes[] = $v['id_venta'];
-	$ventas_por_id[$v['id_venta']] = $v;
 }
 
 // Comprobantes del mes en una sola query
@@ -70,7 +84,7 @@ $boleta_count = 0; $boleta_total = 0;
 $factura_count = 0; $factura_total = 0;
 $nota_count = 0; $nota_total = 0;
 
-foreach ($ventas_mes_list as $v) {
+foreach ($ventas_mes_all as $v) {
 	$id = $v['id_venta'];
 	$total = floatval($v['total']);
 	if (isset($comp_tipo_map[$id])) {
@@ -130,6 +144,16 @@ foreach ($ventas_mes_list as $v) {
 								<h4 style="margin:10px 0 5px;">S/ <?php echo number_format($ventas_dia_total, 2); ?></h4>
 								<p style="color:#888; margin:0;">Ventas hoy (<?php echo $ventas_dia_count; ?>)</p>
 							</div>
+							<?php if (!empty($dia_por_forma)): ?>
+							<ul style="list-style:none; padding:0 15px 10px; margin:0; font-size:12px;">
+								<?php foreach ($dia_por_forma as $fk => $fv): ?>
+								<li style="display:flex; justify-content:space-between; padding:2px 0; border-top:1px solid #f0f0f0;">
+									<span><?php echo isset($formas_nombre[$fk]) ? $formas_nombre[$fk] : 'Otro'; ?></span>
+									<strong>S/ <?php echo number_format($fv, 2); ?></strong>
+								</li>
+								<?php endforeach; ?>
+							</ul>
+							<?php endif; ?>
 						</div>
 					</div>
 					<div class="col-md-3 col-sm-6">
@@ -139,6 +163,16 @@ foreach ($ventas_mes_list as $v) {
 								<h4 style="margin:10px 0 5px;">S/ <?php echo number_format($ventas_mes_total, 2); ?></h4>
 								<p style="color:#888; margin:0;">Ventas del mes (<?php echo $ventas_mes_count; ?>)</p>
 							</div>
+							<?php if (!empty($mes_por_forma)): ?>
+							<ul style="list-style:none; padding:0 15px 10px; margin:0; font-size:12px;">
+								<?php foreach ($mes_por_forma as $fk => $fv): ?>
+								<li style="display:flex; justify-content:space-between; padding:2px 0; border-top:1px solid #f0f0f0;">
+									<span><?php echo isset($formas_nombre[$fk]) ? $formas_nombre[$fk] : 'Otro'; ?></span>
+									<strong>S/ <?php echo number_format($fv, 2); ?></strong>
+								</li>
+								<?php endforeach; ?>
+							</ul>
+							<?php endif; ?>
 						</div>
 					</div>
 					<div class="col-md-3 col-sm-6">
