@@ -9,11 +9,16 @@ $newDate = date("Y-m-d", strtotime($fecha));
 
 include('inc/sdba/sdba.php'); // include main file
 
-//obtnemos colaboradores
-$clientes = Sdba::table('clientes');
-$el = $clientes->get();
-foreach ($el as $value) {
-	$emplel.='<option value="'.$value['id_cliente'].'">'.$value['cliente'].'</option>';
+// ID del cliente "Varios" (se busca o crea si no existe)
+$cl_varios = Sdba::table('clientes');
+$cl_varios->where('cliente', 'VARIOS');
+$varios_row = $cl_varios->get_one();
+if ($varios_row) {
+	$id_varios = $varios_row['id_cliente'];
+} else {
+	$cl_new = Sdba::table('clientes');
+	$cl_new->insert(array('id_cliente'=>'','cliente'=>'VARIOS','doc_identidad'=>'','telefono'=>'','email'=>'','estado'=>'1'));
+	$id_varios = $cl_new->insert_id();
 }
 
 
@@ -29,6 +34,7 @@ foreach ($el as $value) {
     <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/custom.css">
     <link rel="stylesheet" href="/assets/css/jquery-ui.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.0.5/sweetalert2.min.css">
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
 </head>
@@ -87,10 +93,14 @@ foreach ($el as $value) {
 															 </div>
 											    		</div>
 											    		<div class="col-md-3">
-											    			<label for="exampleInputPassword1">Cliente</label>
-															    <select class="form-control" name="cliente">
-															    	<?php echo $emplel; ?>
-															    </select>
+											    			<label>Cliente</label>
+											    			<div class="input-group">
+											    				<input type="text" class="form-control" id="cliente_texto" placeholder="Buscar o vacío (Varios)">
+											    				<input type="hidden" name="cliente" id="cliente_id" value="<?php echo $id_varios; ?>">
+											    				<span class="input-group-btn">
+											    					<button type="button" class="btn btn-success" id="btn_nuevo_cliente" title="Agregar nuevo cliente"><i class="fas fa-plus"></i></button>
+											    				</span>
+											    			</div>
 											    		</div>
 											    		<div class="col-md-3">
 											    			<label for="exampleInputPassword1">Tipo</label>
@@ -374,6 +384,67 @@ foreach ($el as $value) {
 				  	}
 				});
 			});
+		// Autocomplete de clientes
+		$('#cliente_texto').autocomplete({
+			source: function(request, response) {
+				$.ajax({
+					type: 'GET',
+					dataType: 'json',
+					url: '/inc/autocomplete-cliente.php',
+					data: { term: request.term },
+					success: function(data) {
+						response(data);
+					}
+				});
+			},
+			minLength: 1,
+			select: function(event, ui) {
+				$('#cliente_id').val(ui.item.id);
+				$('#cliente_texto').val(ui.item.value);
+				return false;
+			}
+		});
+
+		// Resetear cliente_id al modificar el texto (si no selecciona de la lista, queda Varios)
+		$('#cliente_texto').on('input', function() {
+			$('#cliente_id').val('<?php echo $id_varios; ?>');
+		});
+
+		// Crear nuevo cliente rápido
+		$('#btn_nuevo_cliente').on('click', function() {
+			swal({
+				title: 'Nuevo Cliente',
+				input: 'text',
+				inputPlaceholder: 'Nombre del cliente',
+				showCancelButton: true,
+				confirmButtonText: 'Guardar',
+				cancelButtonText: 'Cancelar',
+				inputValidator: function(value) {
+					if (!value) {
+						return 'Ingrese un nombre';
+					}
+				}
+			}).then(function(result) {
+				if (result.value) {
+					$.ajax({
+						type: 'POST',
+						dataType: 'json',
+						url: '/inc/registrar_cliente_rapido.php',
+						data: { nombre: result.value },
+						success: function(resp) {
+							if (resp.success) {
+								$('#cliente_texto').val(resp.nombre);
+								$('#cliente_id').val(resp.id);
+								swal('Registrado', 'Cliente creado correctamente', 'success');
+							} else {
+								swal('Error', resp.mensaje, 'error');
+							}
+						}
+					});
+				}
+			});
+		});
+
 		$('body').on('click',"#guardar_venta", function(e){
           e.preventDefault();
 
