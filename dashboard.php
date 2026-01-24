@@ -39,6 +39,54 @@ for ($d = 6; $d >= 0; $d--) {
 	$chart_data[] = $total_d ? $total_d : 0;
 }
 
+// Desglose por tipo de comprobante (mes actual)
+$v_mes_q = Sdba::table('ventas');
+$v_mes_q->where('fecha >=', $mes_inicio)->and_where('estado !=', '2');
+$ventas_mes_list = $v_mes_q->get();
+
+$venta_ids_mes = array();
+$ventas_por_id = array();
+foreach ($ventas_mes_list as $v) {
+	$venta_ids_mes[] = $v['id_venta'];
+	$ventas_por_id[$v['id_venta']] = $v;
+}
+
+// Comprobantes del mes en una sola query
+$comp_tipo_map = array(); // id_venta => tipo
+if (!empty($venta_ids_mes)) {
+	$comp_q = Sdba::table('comprobantes');
+	$comp_q->where_in('venta', $venta_ids_mes);
+	$comp_list = $comp_q->get();
+	foreach ($comp_list as $c) {
+		// Solo el tipo principal (F o B), ignorar notas de crédito
+		if (($c['tipo'] == 'F' || $c['tipo'] == 'B') && !isset($comp_tipo_map[$c['venta']])) {
+			$comp_tipo_map[$c['venta']] = $c['tipo'];
+		}
+	}
+}
+
+// Calcular totales por tipo
+$boleta_count = 0; $boleta_total = 0;
+$factura_count = 0; $factura_total = 0;
+$nota_count = 0; $nota_total = 0;
+
+foreach ($ventas_mes_list as $v) {
+	$id = $v['id_venta'];
+	$total = floatval($v['total']);
+	if (isset($comp_tipo_map[$id])) {
+		if ($comp_tipo_map[$id] == 'B') {
+			$boleta_count++;
+			$boleta_total += $total;
+		} else {
+			$factura_count++;
+			$factura_total += $total;
+		}
+	} else {
+		$nota_count++;
+		$nota_total += $total;
+	}
+}
+
 ?>
 
 
@@ -108,6 +156,35 @@ for ($d = 6; $d >= 0; $d--) {
 								<i class="fas fa-exclamation-triangle fa-2x" style="color:#d9534f;"></i>
 								<h4 style="margin:10px 0 5px;"><?php echo $stock_bajo; ?></h4>
 								<p style="color:#888; margin:0;">Stock bajo (&le; 5)</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-4">
+						<div class="panel panel-default">
+							<div class="panel-body text-center">
+								<i class="fas fa-file-invoice fa-2x" style="color:#5bc0de;"></i>
+								<h4 style="margin:10px 0 5px;">S/ <?php echo number_format($boleta_total, 2); ?></h4>
+								<p style="color:#888; margin:0;">Boletas del mes (<?php echo $boleta_count; ?>)</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="panel panel-default">
+							<div class="panel-body text-center">
+								<i class="fas fa-file-invoice-dollar fa-2x" style="color:#5cb85c;"></i>
+								<h4 style="margin:10px 0 5px;">S/ <?php echo number_format($factura_total, 2); ?></h4>
+								<p style="color:#888; margin:0;">Facturas del mes (<?php echo $factura_count; ?>)</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="panel panel-default">
+							<div class="panel-body text-center">
+								<i class="fas fa-receipt fa-2x" style="color:#f0ad4e;"></i>
+								<h4 style="margin:10px 0 5px;">S/ <?php echo number_format($nota_total, 2); ?></h4>
+								<p style="color:#888; margin:0;">Nota de venta del mes (<?php echo $nota_count; ?>)</p>
 							</div>
 						</div>
 					</div>
