@@ -45,6 +45,11 @@ $mensajeError = 'hasta aca bien';
 		$datas = array('id_stock'=>'','producto'=>$producto,'egreso'=>$cantidad,'stock'=>$stockf,'motivo'=>$motivo,'fv'=>$fv,'stockt'=>$stockf,'fecha'=>$fecha);
 		$datava = array('id_variante'=>$idvr,'producto'=>$producto,'variante'=>$fv, 'stock'=>$stockf);
 	}
+	// Actualizar stockp en productos
+	$productos = Sdba::table('productos');
+	$productos->where('id_producto', $producto);
+	$datap = array('stockp'=>$stockft);
+	$productos->update($datap);
 	
 				
 	//guardamos en stock

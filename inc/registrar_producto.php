@@ -29,7 +29,7 @@ $mensajeError = 'hasta aca bien';
 	//guardamos en tabla ventas
 			
 			$ventas = Sdba::table('productos');
-			$data = array('id_producto'=>'','cod_sunat'=> '','serie'=>'','nom_prod'=>$nombre,'codigo_producto'=>$codigo,'color'=>$color,'unidad_prod'=>$unidad,'categoria'=>$categoria,'marca'=>$marca,'precio_compra'=>'','precio_venta'=>$precio_v,'precio_compra'=>$precio_c,'exonerada'=>$exonerada,'proveedor'=>'1','estado'=>'1');
+			$data = array('id_producto'=>'','cod_sunat'=> '','serie'=>'','nom_prod'=>$nombre,'codigo_producto'=>$codigo,'color'=>$color,'unidad_prod'=>$unidad,'categoria'=>$categoria,'marca'=>$marca,'precio_compra'=>'','precio_venta'=>$precio_v,'precio_compra'=>$precio_c,'stockp'=>$stockn,'exonerada'=>$exonerada,'proveedor'=>'1','estado'=>'1');
 			$ventas->insert($data);
 			$venta_id = $ventas->insert_id();
 			if ($venta_id) {
