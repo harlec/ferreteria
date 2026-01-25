@@ -3,16 +3,6 @@ include('inc/control.php');
 $fecha = date('d-m-Y');
 $newDate = date("Y-m-d", strtotime($fecha));
 
-include('inc/sdba/sdba.php');
-
-// Solo cargar proveedores (lista pequeña)
-$proveedores = Sdba::table('proveedores');
-$proveedoresl = $proveedores->get();
-$proveedoreslt = '';
-foreach ($proveedoresl as $key) {
-	$proveedoreslt .='<option value="'.$key['id_proveedor'].'">'.$key['proveedor'].'</option>'; 
-}
-
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -26,7 +16,7 @@ foreach ($proveedoresl as $key) {
     <link rel="stylesheet" href="/assets/css/jquery-ui.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.0.5/sweetalert2.min.css">
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" type="text/css" href="/assets/css/select2.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 </head>
 
 <body class="mobile dashboard">
@@ -85,17 +75,28 @@ foreach ($proveedoresl as $key) {
 															    <input type="date" class="form-control" name="fecha_des" id="fecha_des" value="<?php echo $newDate; ?>" placeholder="monto">
 															 </div>
 											    		</div>
-											    		<div class="col-md-4">
-											    			<div class="form-group">
-															    <label for="exampleInputPassword1">Proveedor</label>
-															    <select class="form-control" id="proveedor" name="proveedor">
-															    	<?php echo $proveedoreslt; ?>
-															    </select>
-															</div>
+											    		<div class="col-md-3">
+											    			<label>Proveedor</label>
+											    			<div class="input-group">
+											    				<input type="text" class="form-control" id="proveedor_texto" placeholder="Buscar proveedor...">
+											    				<input type="hidden" name="proveedor" id="proveedor_id" value="">
+											    				<span class="input-group-btn">
+											    					<button type="button" class="btn btn-success" id="btn_nuevo_proveedor" title="Agregar nuevo proveedor"><i class="fas fa-plus"></i></button>
+											    				</span>
+											    			</div>
 											    		</div>
 											    		<div class="col-md-2">
 											    			<div class="form-group">
-															    <label for="exampleInputPassword1">Exonerada Igv</label>
+															    <label>Tipo</label>
+															    <select class="form-control" name="tipo">
+															    	<option value="1">Contado</option>
+															    	<option value="2">Crédito</option>
+															    </select>
+															</div>
+											    		</div>
+											    		<div class="col-md-1">
+											    			<div class="form-group">
+															    <label>Exo. Igv</label>
 															    <select class="form-control" name="exonerada">
 															    	<option value="no">No</option>
 															    	<option value="si">Si</option>
@@ -213,11 +214,69 @@ foreach ($proveedoresl as $key) {
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.0.5/sweetalert2.min.js"></script>
 	<script src="//cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
-	<script src="/assets/js/select2.full.min.js"></script>
-	<script >
-	// A $( document ).ready() block.
-	$(document ).ready(function() {
-		$('#proveedor').select2();
+	<script>
+	$(document).ready(function() {
+
+		// Autocomplete de proveedores
+		$('#proveedor_texto').autocomplete({
+			source: function(request, response) {
+				$.ajax({
+					type: 'GET',
+					dataType: 'json',
+					url: '/inc/autocomplete-proveedor.php',
+					data: { term: request.term },
+					success: function(data) {
+						response(data);
+					}
+				});
+			},
+			minLength: 1,
+			select: function(event, ui) {
+				$('#proveedor_id').val(ui.item.id);
+				$('#proveedor_texto').val(ui.item.value);
+				return false;
+			}
+		});
+
+		// Resetear proveedor_id al modificar el texto
+		$('#proveedor_texto').on('input', function() {
+			$('#proveedor_id').val('');
+		});
+
+		// Crear nuevo proveedor rápido
+		$('#btn_nuevo_proveedor').on('click', function() {
+			swal({
+				title: 'Nuevo Proveedor',
+				input: 'text',
+				inputPlaceholder: 'Nombre del proveedor',
+				showCancelButton: true,
+				confirmButtonText: 'Guardar',
+				cancelButtonText: 'Cancelar',
+				inputValidator: function(value) {
+					if (!value) {
+						return 'Ingrese un nombre';
+					}
+				}
+			}).then(function(result) {
+				if (result.value) {
+					$.ajax({
+						type: 'POST',
+						dataType: 'json',
+						url: '/inc/registrar_proveedor_rapido.php',
+						data: { nombre: result.value },
+						success: function(resp) {
+							if (resp.success) {
+								$('#proveedor_texto').val(resp.nombre);
+								$('#proveedor_id').val(resp.id);
+								swal('Registrado', 'Proveedor creado correctamente', 'success');
+							} else {
+								swal('Error', resp.mensaje, 'error');
+							}
+						}
+					});
+				}
+			});
+		});
 
 		$.extend( true, $.fn.dataTable.defaults, {
 		    "language": {

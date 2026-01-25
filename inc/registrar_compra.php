@@ -15,6 +15,7 @@ if (isset($_POST) && !empty($_POST)) {
 	$fecha_despacho = $_POST['fecha_des'];
 	$fecha = date("Y-m-d");
 	$proveedor = $_POST['proveedor'];
+	$tipo = isset($_POST['tipo']) ? $_POST['tipo'] : '1';
 	$guia = $_POST['guia'];
 	$serie = $_POST['serie'];
 	$numero = $_POST['numero'];
@@ -74,7 +75,7 @@ if (isset($_POST) && !empty($_POST)) {
 			}
 
 			$ventas = Sdba::table('compras');
-			$data = array('id_compra'=>'','fecha'=> $fecha,'fecha_ingreso'=>$fecha_ingreso,'fecha_despacho'=>$fecha_despacho,'guia'=>$guia,'serie_f'=>$serie,'numero_f'=>$numero,'total'=>$total,'moneda'=>$moneda,'proveedor'=>$proveedor,'usuario'=>$id_usuario,'observacion'=>$observaciones,'exonerada'=>$exonerada,'estado'=>'0');
+			$data = array('id_compra'=>'','fecha'=> $fecha,'fecha_ingreso'=>$fecha_ingreso,'fecha_despacho'=>$fecha_despacho,'guia'=>$guia,'serie_f'=>$serie,'numero_f'=>$numero,'total'=>$total,'moneda'=>$moneda,'proveedor'=>$proveedor,'usuario'=>$id_usuario,'observacion'=>$observaciones,'exonerada'=>$exonerada,'tipo'=>$tipo,'estado'=>'0');
 			$ventas->insert($data);
 			$venta_id = $ventas->insert_id();
 			if ($venta_id) {
