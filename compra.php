@@ -3,28 +3,9 @@ include('inc/control.php');
 $fecha = date('d-m-Y');
 $newDate = date("Y-m-d", strtotime($fecha));
 
-include('inc/sdba/sdba.php'); // include main file
-$ventas = Sdba::table('productos');
-$ventas->left_join('unidad_prod','unidades','id_unidad'); // creating table object
-$ventas_list = $ventas->get(); 
+include('inc/sdba/sdba.php');
 
-$datos = '';
-$i = 1;
-foreach ($ventas_list as $value) {
-
-	$marca = Sdba::table('marca');
-	$marca->where('id_marca',$value['marca']);
-	//$marca->order_by('id_stock','desc');
-	$marca1 = $marca->get_one();
-	$marcan = $marca1['marca'];
-
-	$datos .='<tr> 
-    			<td style="text-transform:uppercase;" class="nom_prod">'.$value['nom_prod'].' '.$marcan.'</td>
-    			<td style="text-transform:uppercase;" class="unidad">'.$value['nombre'].'</td>
-    			<td><button id="agregar" value="'.$value['id_producto'].'" class="btn btn-xs btn-success"> + </button></td>
-    		  </tr>';
-    $i++;
-}
+// Solo cargar proveedores (lista pequeña)
 $proveedores = Sdba::table('proveedores');
 $proveedoresl = $proveedores->get();
 $proveedoreslt = '';
@@ -208,17 +189,15 @@ foreach ($proveedoresl as $key) {
 				</div>
 				<div class="panel panel-default pa">
 					<div class="panel-body">
-					    <table id="datos" class="table table-hover"> 
-					    	<thead> 
-					    		<tr> 
+					    <table id="datos" class="table table-hover" style="width:100%">
+					    	<thead>
+					    		<tr>
 					    			<th>Producto</th>
 					    			<th>Unidad</th>
-					    			<th></th> 
-					    		</tr> 
-					    	</thead> 
-					    	<tbody> 
-					    		<?php echo $datos; ?>
-					    	</tbody> 
+					    			<th></th>
+					    		</tr>
+					    	</thead>
+					    	<tbody></tbody>
 					    </table>
 					</div>
 				</div>
@@ -289,24 +268,36 @@ foreach ($proveedoresl as $key) {
 		    }           
 		} );     
 
-		$('#datos').DataTable();
-
+		// DataTables con Server-Side Processing
+		$('#datos').DataTable({
+			processing: true,
+			serverSide: true,
+			ajax: {
+				url: '/inc/productos_compra_ajax.php',
+				type: 'POST'
+			},
+			columns: [
+				{ data: 0 },
+				{ data: 1 },
+				{ data: 2, orderable: false }
+			],
+			pageLength: 10,
+			order: [[0, 'asc']]
+		});
 
 		var total = 0;
 
-		$('#datos').on('click', '#agregar', function(){
+		// Usar delegación de eventos para botones dinámicos
+		$('#datos tbody').on('click', '#agregar', function(){
 		    var nombre = $(this).closest('tr').find('.nom_prod').text();
-		    var precio = $(this).closest('tr').find('.precio_venta').text();
+		    var precio = '';
 		    var unidad = $(this).closest('tr').find('.unidad').text();
 		    var cantidad = 1;
 		    var id_p = $(this).val();
-		    var monto = precio;
-		    total = monto*1 + total*1;
+		    var monto = 0;
 
-		    $('#items tr:last').after('<tr class="child"><input type="hidden" value="'+id_p+'" name="id_pro[]" ><td><input class="cantidad" type="number" value="'+cantidad+'" name="cantidad[]"></td><td style="text-transform:uppercase;">'+unidad+'</td><td>'+nombre+'</td><td><input type="date" name="fv[]"></td><td><input type="number" class="pre" value="'+precio+'" name="precio[]"></td><td ><input class="mon" type="text" value="'+monto+'" name="total_pre[]" ></td><td><button value="'+monto+'" class="borrar">x</button></td></tr>');
+		    $('#items tr:last').after('<tr class="child"><input type="hidden" value="'+id_p+'" name="id_pro[]" ><td><input class="cantidad" type="number" value="'+cantidad+'" name="cantidad[]"></td><td style="text-transform:uppercase;">'+unidad+'</td><td>'+nombre+'</td><td><input type="date" name="fv[]"></td><td><input type="number" class="pre" value="'+precio+'" name="precio[]"></td><td ><input class="mon" type="text" value="'+monto+'" name="total_pre[]" ></td><td><button type="button" value="'+monto+'" class="borrar">x</button></td></tr>');
 		    $("#total").val(total);
-
-
 		});
 	    //borrar item
 	    $("#items").on('click', '.borrar', function () {
@@ -351,41 +342,6 @@ foreach ($proveedoresl as $key) {
 		});
 
 
-	   		//autocompletamos el producto
-		    $('#basics').autocomplete({
-		      	source: function(request,response){
-					var str = 'term='+request.term;
-					//alert('entro');
-					$.ajax({
-							type:'GET',
-							dataType: 'json',
-							url: '/inc/autocomplete-producto.php',
-							data: str,
-							success: function(data){
-								response(data);
-								//$("#precio").val('12');
-							}
-					});
-				}
-				//minLength: 2
-		    });
-
-		    //obtenemos el precio
-		    $('#basics').on('change paste keyup', function(){
-		    	var str1 = 'producto='+$('#basics').val();
-		    	//alert (str1);
-		    	$.ajax({	
-			    	type:'GET',
-					dataType: 'json',
-				  	url: '/inc/autocomplete-precio.php',
-				  	data: str1,
-				  	success: function(response) {
-				   	 	$('#precio').val(response.precio);
-				   	 	$('#id_p').val(response.id_p);
-				   	 	
-				  	}
-				});
-			});
 		$('body').on('click',"#guardar_venta", function(e){
           e.preventDefault();
 
@@ -394,8 +350,7 @@ foreach ($proveedoresl as $key) {
 				//DNI = $('#dni_ruc').val();
 
 				var str2 = $('#venta').serialize();
-				alert(str2);
-				
+
 				$.ajax({
 					cache: false,
 					type: "POST",
