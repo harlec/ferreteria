@@ -6,7 +6,26 @@ $id = $_GET['id'];
 $ventas = Sdba::table('detalle_ventas'); // creating table object
 $ventas->where('venta', $id);
 $ventas->left_join('producto','productos','id_producto');
-$ventas_list = $ventas->get(); 
+$ventas_list = $ventas->get();
+
+// Obtener todos los despachos de esta venta
+$despachos_map = array(); // id_detalle => cantidad_despachada
+$detalle_ids = array();
+foreach ($ventas_list as $v) {
+	$detalle_ids[] = $v['id_detalle'];
+}
+if (!empty($detalle_ids)) {
+	$desp = Sdba::table('despachos');
+	$desp->where_in('detalle', $detalle_ids);
+	$desp_list = $desp->get();
+	foreach ($desp_list as $d) {
+		$det_id = $d['detalle'];
+		if (!isset($despachos_map[$det_id])) {
+			$despachos_map[$det_id] = 0;
+		}
+		$despachos_map[$det_id] += floatval($d['cantidad']);
+	}
+}
 
 //print_r($ventas_list);
 $ocultar = '';
@@ -22,15 +41,35 @@ $datos = '';
 $i = 1;
 $tot = 0;
 foreach ($ventas_list as $value) {
-
 	$tot = $tot + $value['total'];
+	$id_det = $value['id_detalle'];
+	$cant = floatval($value['cantidad']);
+	$despachado = isset($despachos_map[$id_det]) ? $despachos_map[$id_det] : 0;
+	$pendiente = $cant - $despachado;
 
-	$datos .='<tr> 
-    			<th scope="row">'.$i.'</th> 
-    			<td>'.$value['nom_prod'].'</td> 
+	// Color de fila según estado
+	$row_class = '';
+	if ($pendiente <= 0) {
+		$row_class = 'success'; // Verde - todo despachado
+	} elseif ($despachado > 0) {
+		$row_class = 'warning'; // Amarillo - parcial
+	}
+
+	// Botón despachar solo si hay pendiente
+	$btn_despachar = '';
+	if ($pendiente > 0) {
+		$btn_despachar = '<button class="btn btn-sm btn-info btn-despachar" data-detalle="'.$id_det.'" data-pendiente="'.$pendiente.'" data-nombre="'.htmlspecialchars($value['nom_prod']).'"><i class="fas fa-truck"></i></button>';
+	}
+
+	$datos .='<tr class="'.$row_class.'">
+    			<th scope="row">'.$i.'</th>
+    			<td>'.$value['nom_prod'].'</td>
     			<td>'.$value['cantidad'].'</td>
-    			<td>'.$value['precio'].'</td> 
+    			<td>'.$despachado.'</td>
+    			<td>'.$pendiente.'</td>
+    			<td>'.$value['precio'].'</td>
     			<td>'.$value['total'].'</td>
+    			<td>'.$btn_despachar.'</td>
     		  </tr>';
     $i++;
 }
@@ -48,7 +87,8 @@ foreach ($ventas_list as $value) {
     <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/custom.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-    </head>
+    <link rel="stylesheet" type="text/css" href="/assets/css/sweetalert2.min.css">
+</head>
 
 <body class="mobile dashboard">
 	<div class="">
@@ -90,15 +130,18 @@ foreach ($ventas_list as $value) {
 										<div class="panel panel-default pa">
 											<div class="panel-body">
 												<p><strong>Venta id: <?php echo $id; ?></strong></p>
-											    <table id="datos" class="table table-hover"> 
-											    	<thead> 
-											    		<tr> 
-											    			<th>#</th> 
-											    			<th>Nombre</th> 
-											    			<th>Cantidad</th> 
+											    <table id="datos" class="table table-hover">
+											    	<thead>
+											    		<tr>
+											    			<th>#</th>
+											    			<th>Nombre</th>
+											    			<th>Cant.</th>
+											    			<th>Despachado</th>
+											    			<th>Pendiente</th>
 											    			<th>Precio</th>
-											    			<th>Total</th>  
-											    		</tr> 
+											    			<th>Total</th>
+											    			<th>Despacho</th>
+											    		</tr>
 											    	</thead> 
 											    	<tbody> 
 											    		<?php echo $datos; ?>
@@ -128,12 +171,64 @@ foreach ($ventas_list as $value) {
 	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-	<script >
-	// A $( document ).ready() block.
-	$(document ).ready(function() {	
-	    console.log( "ready!" );
+	<script src="assets/js/sweetalert2.all.min.js"></script>
+	<script>
+	$(document).ready(function() {
+		$('.btn-despachar').on('click', function() {
+			var detalle = $(this).data('detalle');
+			var pendiente = $(this).data('pendiente');
+			var nombre = $(this).data('nombre');
+			var venta = <?php echo $id; ?>;
+
+			Swal.fire({
+				title: 'Despachar: ' + nombre,
+				input: 'number',
+				inputLabel: 'Cantidad a despachar (max: ' + pendiente + ')',
+				inputValue: pendiente,
+				inputAttributes: {
+					min: 0.01,
+					max: pendiente,
+					step: 0.01
+				},
+				showCancelButton: true,
+				confirmButtonText: 'Despachar',
+				cancelButtonText: 'Cancelar',
+				inputValidator: (value) => {
+					if (!value || value <= 0) {
+						return 'Ingrese una cantidad mayor a 0';
+					}
+					if (parseFloat(value) > pendiente) {
+						return 'No puede despachar mas de ' + pendiente;
+					}
+				}
+			}).then((result) => {
+				if (result.isConfirmed) {
+					$.ajax({
+						type: 'POST',
+						url: '/inc/registrar_despacho.php',
+						data: {
+							detalle: detalle,
+							cantidad: result.value,
+							venta: venta
+						},
+						dataType: 'json',
+						success: function(data) {
+							if (data.success) {
+								Swal.fire('Despachado!', data.mensaje, 'success').then(() => {
+									location.reload();
+								});
+							} else {
+								Swal.fire('Error', data.mensaje, 'error');
+							}
+						},
+						error: function() {
+							Swal.fire('Error', 'Error de conexion', 'error');
+						}
+					});
+				}
+			});
+		});
 	});
-		
 	</script>
 </body>
 </html>
