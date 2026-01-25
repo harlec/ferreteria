@@ -48,7 +48,7 @@ $mensajeError = 'hasta aca bien';
 	// Actualizar stockp en productos
 	$productos = Sdba::table('productos');
 	$productos->where('id_producto', $producto);
-	$datap = array('stockp'=>$stockft);
+	$datap = array('stockp'=>$stockf);
 	$productos->update($datap);
 	
 				
