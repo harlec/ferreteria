@@ -2,9 +2,17 @@
 include('inc/control.php');
 include('inc/sdba/sdba.php');
 
-// Obtener todas las ventas activas
+// Verificar si mostrar todas o solo del mes
+$mostrar_todas = isset($_GET['todas']) && $_GET['todas'] == '1';
+$mes_actual = date('Y-m');
+$mes_inicio = date('Y-m-01');
+
+// Obtener ventas activas
 $ventas = Sdba::table('ventas');
 $ventas->where('estado !=', '2');
+if (!$mostrar_todas) {
+	$ventas->and_where('fecha >=', $mes_inicio);
+}
 $ventas_list = $ventas->get();
 
 // Obtener IDs de ventas
@@ -82,6 +90,10 @@ foreach ($productos_agrupados as $prod) {
 $datos = implode('', $filas);
 
 $total_notas = count($notas_venta_ids);
+
+// Nombre del mes en español
+$meses = array('01'=>'Enero','02'=>'Febrero','03'=>'Marzo','04'=>'Abril','05'=>'Mayo','06'=>'Junio','07'=>'Julio','08'=>'Agosto','09'=>'Septiembre','10'=>'Octubre','11'=>'Noviembre','12'=>'Diciembre');
+$mes_nombre = $meses[date('m')] . ' ' . date('Y');
 ?>
 
 <!DOCTYPE html>
@@ -135,8 +147,15 @@ $total_notas = count($notas_venta_ids);
 		<div class="kbg">
 			<div class="cuerpofull">
 				<div class="titulo">
-					<h3>Productos en Notas de Venta</h3>
-					<p class="text-muted">Total de notas de venta pendientes: <strong><?php echo $total_notas; ?></strong></p>
+					<h3>Productos en Notas de Venta<?php echo $mostrar_todas ? '' : ' - '.$mes_nombre; ?></h3>
+					<p class="text-muted">
+						Total de notas de venta: <strong><?php echo $total_notas; ?></strong>
+						<?php if ($mostrar_todas): ?>
+							<a href="notas_venta.php" class="btn btn-sm btn-default" style="margin-left:15px;">Ver solo este mes</a>
+						<?php else: ?>
+							<a href="notas_venta.php?todas=1" class="btn btn-sm btn-primary" style="margin-left:15px;">Ver todas</a>
+						<?php endif; ?>
+					</p>
 				</div>
 				<div class="container-fluid">
 					<div class="row">
