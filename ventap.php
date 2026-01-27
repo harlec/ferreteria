@@ -104,6 +104,9 @@ foreach ($el as $value) {
 	      		<li>
 	      			<a href="venta_comprobantes.php">Comprobantes</a>
 	      		</li>
+	      		<li>
+	      			<a href="notas_venta.php">Notas de Venta</a>
+	      		</li>
 	      	</ul>
 	      </div>
 	    </nav>
