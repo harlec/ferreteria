@@ -9,20 +9,31 @@ $facturan = 0;
 	$factura_list = $factura->get_one();
 	$facturan = $factura_list['valor'] + 1;
 
-	$id = $_GET['id'];
+	// Soporte para un ID (?id=X) o múltiples IDs (?ids=X,Y,Z)
+	if (isset($_GET['ids']) && $_GET['ids'] != '') {
+		$ids_raw = array_filter(array_map('intval', explode(',', $_GET['ids'])));
+		$id      = $ids_raw[0];
+	} else {
+		$id     = (int)$_GET['id'];
+		$ids_raw = [$id];
+	}
+	$venta_ids_str = implode(',', $ids_raw);
 
 	//obtenemos fecha de la venta
 	$venta = Sdba::table('ventas'); // creating table object
 	$venta->where('id_venta', $id);
 	$venta_l = $venta->get_one();
 
-	$fechita = date("d-m-Y", strtotime($venta_l['fecha'])); 
+	$fechita = date("d-m-Y", strtotime($venta_l['fecha']));
 
-	
-	$ventas = Sdba::table('detalle_ventas'); // creating table object
-	$ventas->where('venta', $id);
-	$ventas->left_join('producto','productos','id_producto');
-	$ventas_list = $ventas->get();
+	// Obtener detalle de todas las ventas seleccionadas
+	$ventas_list = [];
+	foreach ($ids_raw as $vid) {
+		$det = Sdba::table('detalle_ventas');
+		$det->where('venta', $vid);
+		$det->left_join('producto','productos','id_producto');
+		$ventas_list = array_merge($ventas_list, $det->get());
+	}
 
 	$i=1;
 	$tot = 0;
@@ -105,7 +116,7 @@ $facturan = 0;
 									  		<h3>VENTA <?php echo $id; ?><br></h3>
 									  	</div>
 									  		<input type="hidden" name="fechita" name="fechita" value="<?php echo $fechita; ?>">
-									  		<input type="hidden" name="venta_id" name="venta_id" value="<?php echo $id; ?>">
+									  		<input type="hidden" name="venta_id" name="venta_id" value="<?php echo $venta_ids_str; ?>">
 									  		<input class="form-control" type="hidden" name="facturan" value="<?php echo $facturan; ?>">
 									  	<div class="table-responsive">
 									  		<table class="table">

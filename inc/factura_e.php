@@ -11,6 +11,9 @@ if ($_POST['placa']) {
 }
 $fechita = $_POST['fechita'];
 $venta_id = $_POST['venta_id'];
+// Soporte para múltiples IDs (ej: "5,6,7")
+$venta_ids = array_filter(array_map('intval', explode(',', $venta_id)));
+$venta_id_principal = $venta_ids[0]; // para el comprobante
 $fechac = $_POST['fechac'];
 $montoc = $_POST['montoc'];
 
@@ -204,15 +207,17 @@ if (isset($leer_respuesta['errors'])) {
 	//Mostramos los errores si los hay
     echo json_encode($leer_respuesta['errors']);
 } else {
-    $fecha = date("Y-m-d", strtotime($fechita)); 
+    $fecha = date("Y-m-d", strtotime($fechita));
 	$configuracion = Sdba::table('comprobantes');
-    $data = array('id_comprobante'=>'','serie'=>'F003','numero'=>$leer_respuesta['numero'],'url'=>$leer_respuesta['enlace'],'tipo'=>'F','venta'=>$venta_id,'tipo_doc'=>'6','doc'=>$ruc,'nombre'=>$r_social,'moneda'=>'PEN','tipo_cambio'=>'','grabada'=>$totalg,'igv'=>$totaligv,'total'=>$total,'fecha'=>$fecha,'state'=>'0');
+    $data = array('id_comprobante'=>'','serie'=>'F003','numero'=>$leer_respuesta['numero'],'url'=>$leer_respuesta['enlace'],'tipo'=>'F','venta'=>$venta_id_principal,'tipo_doc'=>'6','doc'=>$ruc,'nombre'=>$r_social,'moneda'=>'PEN','tipo_cambio'=>'','grabada'=>$totalg,'igv'=>$totaligv,'total'=>$total,'fecha'=>$fecha,'state'=>'0');
     $configuracion->insert($data);
 
-    $venta = Sdba::table('ventas');
-    $venta->where('id_venta', $venta_id);
-    $data = array('estado'=>'1');
-    $venta->update($data);
+    // Actualizar estado de todas las ventas asociadas
+    foreach ($venta_ids as $vid) {
+        $venta = Sdba::table('ventas');
+        $venta->where('id_venta', $vid);
+        $venta->update(array('estado'=>'1'));
+    }
 
     $numerof = Sdba::table('configuracion');
     $numerof->where('parametro', 'factura');
