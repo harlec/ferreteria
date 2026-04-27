@@ -26,6 +26,7 @@ foreach ($ventas_list as $value) {
 			<td>'.$value['fecha'].'</td>
 			<td>'.$tipo.'</td>
 			<td>'.$value['total'].'</td>
+			<td><a href="ver_venta.php?id='.$id.'"><img src="assets/img/eye.png"></a></td>
 		  </tr>';
 }
 
@@ -107,6 +108,7 @@ foreach ($v as $value) {
 										    						<th>Fecha</th>
 										    						<th>Tipo</th>
 										    						<th>Monto</th>
+																	<th>Opciones</th>
 										    					</tr>
 										    				</thead>
 										    				<tbody>
