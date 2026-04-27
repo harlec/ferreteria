@@ -2,122 +2,144 @@
 include('control.php');
 include('sdba/sdba.php');
 
-// Parametros de DataTables
-$draw    = isset($_GET['draw'])                  ? (int)$_GET['draw']    : 1;
-$start   = isset($_GET['start'])                 ? (int)$_GET['start']   : 0;
-$length  = isset($_GET['length'])                ? (int)$_GET['length']  : 10;
-$search  = isset($_GET['search']['value'])       ? $_GET['search']['value'] : '';
-$orderColumn = isset($_GET['order'][0]['column']) ? (int)$_GET['order'][0]['column'] : 4;
+$draw        = isset($_GET['draw'])                   ? (int)$_GET['draw']    : 1;
+$start       = isset($_GET['start'])                  ? (int)$_GET['start']   : 0;
+$length      = isset($_GET['length'])                 ? (int)$_GET['length']  : 10;
+$search      = isset($_GET['search']['value'])        ? $_GET['search']['value'] : '';
+$orderColumn = isset($_GET['order'][0]['column'])     ? (int)$_GET['order'][0]['column'] : 4;
 $orderDir    = isset($_GET['order'][0]['dir']) && $_GET['order'][0]['dir'] === 'asc' ? 'ASC' : 'DESC';
 
-// Filtros de sesión
-$id_usr    = $_SESSION['id_usr'];
+$id_usr    = (int)$_SESSION['id_usr'];
 $tipo_usr  = $_SESSION['type'];
 $filtro_comp = isset($_GET['tipo_comp']) ? $_GET['tipo_comp'] : '';
 
-// Mapeo de columnas ordenables
-$columnsOrder = [
-    0 => 'v.id_venta',
-    1 => 'v.id_venta',
-    2 => 'v.tipo',
-    3 => 'v.forma',
-    4 => 'v.fecha',
-    5 => 'v.total',
-    6 => 'v.id_venta', // comprobante - order por id
-    7 => 'cl.cliente',
-    8 => 'v.id_venta'
-];
-$orderBy = isset($columnsOrder[$orderColumn]) ? $columnsOrder[$orderColumn] : 'v.fecha';
-
 $db = Sdba::db();
 
-// WHERE base
-$whereParts = ["v.estado != '2'"];
-if ($tipo_usr != 'admin') {
-    $whereParts[] = "v.usuario = " . (int)$id_usr;
-}
+// Filtro por usuario (dentro de cada parte del UNION)
+$user_filter_venta    = $tipo_usr != 'admin' ? "AND v.usuario = {$id_usr}" : '';
+$user_filter_proforma = $tipo_usr != 'admin' ? "AND p.usuario = {$id_usr}" : '';
+
+// Filtro de fecha (mes actual si viene tipo_comp)
+$fecha_filter = '';
 if ($filtro_comp) {
-    $mes_inicio = date("Y-m-01");
-    $whereParts[] = "v.fecha >= '{$mes_inicio}'";
-    if ($filtro_comp == 'B') {
-        $whereParts[] = "c.tipo = 'B'";
-    } elseif ($filtro_comp == 'F') {
-        $whereParts[] = "c.tipo = 'F'";
-    } elseif ($filtro_comp == 'NV') {
-        $whereParts[] = "(c.tipo IS NULL OR (c.tipo != 'B' AND c.tipo != 'F'))";
-    }
+    $mes_inicio   = date('Y-m-01');
+    $fecha_filter = "AND fecha >= '{$mes_inicio}'";
 }
 
-// Busqueda
+// Tipo_comp filter en la parte de ventas
+$comp_filter_venta = '';
+if ($filtro_comp == 'B') {
+    $comp_filter_venta = "AND comp_tipo = 'B'";
+} elseif ($filtro_comp == 'F') {
+    $comp_filter_venta = "AND comp_tipo = 'F'";
+} elseif ($filtro_comp == 'NV') {
+    $comp_filter_venta = "AND (comp_tipo IS NULL OR (comp_tipo != 'B' AND comp_tipo != 'F'))";
+}
+
+// Parte VENTAS del UNION
+$sql_ventas = "SELECT v.id_venta, v.tipo, v.forma, v.fecha, v.total, v.estado,
+                      IFNULL(cl.cliente, 'VARIOS') as nombre_cliente,
+                      c.tipo as comp_tipo, c.numero as comp_numero, c.url as comp_url,
+                      'venta' as origen
+               FROM ventas v
+               LEFT JOIN clientes cl ON v.cliente = cl.id_cliente
+               LEFT JOIN comprobantes c ON c.venta = v.id_venta AND c.id_comprobante = (
+                   SELECT MAX(id_comprobante) FROM comprobantes WHERE venta = v.id_venta
+               )
+               WHERE v.estado != '2' {$user_filter_venta} {$fecha_filter}";
+
+// Parte PROFORMA del UNION (solo si no se filtra por B o F específicamente)
+$sql_proformas = '';
+if ($filtro_comp != 'B' && $filtro_comp != 'F') {
+    $sql_proformas = "UNION ALL
+    SELECT p.id_venta, p.tipo, '' as forma, p.fecha, p.total, p.estado,
+           IFNULL(cl.cliente, 'VARIOS') as nombre_cliente,
+           NULL as comp_tipo, NULL as comp_numero, NULL as comp_url,
+           'proforma' as origen
+    FROM proforma p
+    LEFT JOIN clientes cl ON p.cliente = cl.id_cliente
+    WHERE p.estado != '2' {$user_filter_proforma} {$fecha_filter}";
+}
+
+$union_sql = "({$sql_ventas}) {$sql_proformas}";
+
+// Búsqueda
+$search_where = '';
 if ($search != '') {
     $s = $db->escape('%'.$search.'%', true);
-    $whereParts[] = "(v.id_venta LIKE '{$s}' OR cl.cliente LIKE '{$s}' OR v.fecha LIKE '{$s}' OR v.total LIKE '{$s}')";
+    $search_where = "WHERE (id_venta LIKE '{$s}' OR nombre_cliente LIKE '{$s}' OR fecha LIKE '{$s}' OR total LIKE '{$s}')";
 }
 
-$where = 'WHERE ' . implode(' AND ', $whereParts);
+// Mapeo de columnas ordenables
+$columnsOrder = [
+    0 => 'id_venta', 1 => 'id_venta', 2 => 'tipo', 3 => 'forma',
+    4 => 'fecha', 5 => 'total', 6 => 'id_venta', 7 => 'nombre_cliente', 8 => 'id_venta'
+];
+$orderBy = isset($columnsOrder[$orderColumn]) ? $columnsOrder[$orderColumn] : 'fecha';
 
-// Query base con JOIN
-$baseFrom = "FROM ventas v
-    LEFT JOIN clientes cl ON v.cliente = cl.id_cliente
-    LEFT JOIN comprobantes c ON c.venta = v.id_venta AND c.id_comprobante = (
-        SELECT MAX(id_comprobante) FROM comprobantes WHERE venta = v.id_venta
-    )";
-
-// Total sin filtros del usuario (solo estado)
-$whereTotal = "WHERE v.estado != '2'";
-if ($tipo_usr != 'admin') {
-    $whereTotal .= " AND v.usuario = " . (int)$id_usr;
-}
-$totalResult = $db->query("SELECT COUNT(*) as total FROM ventas v {$whereTotal}")->row();
-$totalRecords = (int)$totalResult['total'];
+// Total sin filtro de búsqueda
+$totalResult    = $db->query("SELECT COUNT(*) as total FROM ({$union_sql}) AS t {$comp_filter_venta}")->row();
+$totalRecords   = (int)$totalResult['total'];
 
 // Total filtrado
-$filteredResult = $db->query("SELECT COUNT(*) as total {$baseFrom} {$where}")->row();
+$filteredResult  = $db->query("SELECT COUNT(*) as total FROM ({$union_sql}) AS t {$comp_filter_venta} {$search_where}")->row();
 $filteredRecords = (int)$filteredResult['total'];
 
-// Query principal
-$sql = "SELECT v.id_venta, v.tipo, v.forma, v.fecha, v.total, v.estado,
-        cl.cliente as nombre_cliente,
-        c.tipo as comp_tipo, c.numero as comp_numero, c.url as comp_url
-    {$baseFrom}
-    {$where}
-    ORDER BY {$orderBy} {$orderDir}
-    LIMIT {$start}, {$length}";
+// Datos paginados
+$sql = "SELECT * FROM ({$union_sql}) AS t {$comp_filter_venta} {$search_where}
+        ORDER BY {$orderBy} {$orderDir}
+        LIMIT {$start}, {$length}";
 
 $data = $db->query($sql)->result();
 
 // Mapas
-$tipos_pago = ['1'=>'Contado','2'=>'Crédito'];
+$tipos_pago = ['1'=>'Contado', '2'=>'Crédito'];
 $formas_pago = ['1'=>'Efectivo','2'=>'Tar. Débito','3'=>'Tar. Crédito','4'=>'Crédito','5'=>'Yape','6'=>'Transferencia'];
 
 $result = [];
 $num = $start + 1;
 foreach ($data as $row) {
-    $id = $row['id_venta'];
+    $id     = $row['id_venta'];
+    $origen = $row['origen'];
+
     $tipo  = isset($tipos_pago[$row['tipo']]) ? $tipos_pago[$row['tipo']] : '';
     $forma = isset($formas_pago[$row['forma']]) ? $formas_pago[$row['forma']] : '';
 
-    // Comprobante
-    $ocultar    = '';
-    $comp_tipo  = $row['comp_tipo'];
-    $comp_html  = '';
-    if ($row['estado'] == '1' && ($comp_tipo == 'B' || $comp_tipo == 'F')) {
-        $ocultar   = 'ocultar';
-        $comp_html = '<a title="Ver comprobante" target="_BLANK" href="'.$row['comp_url'].'">'.$comp_tipo.$row['comp_numero'].'</a>';
-    } else {
-        $comp_html = '<span class="label label-default">Nota de Venta</span>';
+    // Badge proforma
+    if ($origen === 'proforma') {
+        $tipo  = '<span class="label label-info">Proforma</span>';
+        $forma = '-';
     }
 
-    // Cliente: primeros 2 nombres
-    $nombre_raw   = $row['nombre_cliente'] ?? 'VARIOS';
-    $partes       = explode(' ', trim($nombre_raw));
-    $nombre_corto = implode(' ', array_slice($partes, 0, 2));
+    // Comprobante
+    $comp_tipo = $row['comp_tipo'];
+    if ($origen === 'venta' && $row['estado'] == '1' && ($comp_tipo == 'B' || $comp_tipo == 'F')) {
+        $comp_html = '<a title="Ver comprobante" target="_BLANK" href="'.$row['comp_url'].'">'.$comp_tipo.$row['comp_numero'].'</a>';
+        $ocultar   = 'ocultar';
+    } else {
+        $comp_html = $origen === 'proforma'
+            ? '<span class="label label-default">Proforma</span>'
+            : '<span class="label label-default">Nota de Venta</span>';
+        $ocultar   = '';
+    }
 
-    // Opciones
-    $opciones = '<a title="Ver venta" class="btn btn-primary btn-xs" href="ver_venta.php?id='.$id.'"><i class="fas fa-eye"></i></a> '
-              . '<a class="btn btn-success btn-xs '.$ocultar.'" href="factura.php?id='.$id.'" title="Factura electrónica"><i class="fas fa-file-invoice-dollar"></i></a> '
-              . '<a class="btn btn-danger btn-xs '.$ocultar.'" href="boleta.php?id='.$id.'" title="Boleta electrónica"><i class="fab fa-bitcoin"></i></a> '
-              . '<button class="btn-custom btn-borrar" value="'.$id.'" title="Borrar"><img src="/assets/img/trash.png" /></button>';
+    // Cliente: primeros 2 palabras
+    $partes  = explode(' ', trim($row['nombre_cliente']));
+    $cliente = strtoupper(implode(' ', array_slice($partes, 0, 2)));
+
+    // Opciones según origen
+    if ($origen === 'proforma') {
+        $opciones =
+            '<a title="Ver proforma" class="btn btn-info btn-xs" href="ver_proforma.php?id='.$id.'"><i class="fas fa-eye"></i></a> ' .
+            '<a title="Imprimir" class="btn btn-default btn-xs" href="recibop.php?id='.$id.'" target="_blank"><i class="fas fa-print"></i></a> ' .
+            '<a title="Convertir a venta" class="btn btn-success btn-xs" href="proforma_to_venta.php?id='.$id.'"><i class="fas fa-exchange-alt"></i></a>';
+    } else {
+        $opciones =
+            '<a title="Ver venta" class="btn btn-primary btn-xs" href="ver_venta.php?id='.$id.'"><i class="fas fa-eye"></i></a> ' .
+            '<a class="btn btn-success btn-xs '.$ocultar.'" href="factura.php?id='.$id.'" title="Factura"><i class="fas fa-file-invoice-dollar"></i></a> ' .
+            '<a class="btn btn-danger btn-xs '.$ocultar.'" href="boleta.php?id='.$id.'" title="Boleta"><i class="fab fa-bitcoin"></i></a> ' .
+            '<button class="btn-custom btn-borrar" value="'.$id.'" title="Borrar"><img src="/assets/img/trash.png" /></button>';
+    }
 
     $result[] = [
         $num++,
@@ -127,7 +149,7 @@ foreach ($data as $row) {
         $row['fecha'],
         $row['total'],
         $comp_html,
-        strtoupper($nombre_corto),
+        $cliente,
         $opciones
     ];
 }
