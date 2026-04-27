@@ -16,6 +16,7 @@ if (isset($_POST) && !empty($_POST)) {
 	$cliente = $_POST['cliente'];
 	$tipo = $_POST['tipo'];
 	$forma = $_POST['forma'];
+	$fecha_pago = isset($_POST['fecha_pago']) && $_POST['fecha_pago'] != '' ? $_POST['fecha_pago'] : null;
 	$fecha_ope = date("Y-m-d H:i:s");
 	$id_p = $_POST['id_pro'];
 	$fv= $_POST['fv'];
@@ -74,7 +75,7 @@ if (isset($_POST) && !empty($_POST)) {
 			}
 
 			$ventas = Sdba::table('ventas');
-			$data = array('id_venta'=>'','fecha'=> $fecha,'fecha_ope'=>$fecha_ope,'total'=>$total,'cliente'=>$cliente,'usuario'=>$id_usuario,'tipo'=>$tipo,'forma'=>$forma,'estado'=>'0');
+			$data = array('id_venta'=>'','fecha'=> $fecha,'fecha_ope'=>$fecha_ope,'total'=>$total,'cliente'=>$cliente,'usuario'=>$id_usuario,'tipo'=>$tipo,'forma'=>$forma,'fecha_pago'=>$fecha_pago,'estado'=>'0');
 			$ventas->insert($data);
 			$venta_id = $ventas->insert_id();
 			if ($venta_id) {

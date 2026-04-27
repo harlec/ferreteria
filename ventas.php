@@ -51,6 +51,9 @@ $ajax_url = '/inc/ventas_ajax.php' . ($filtro_comp ? '?tipo_comp='.htmlspecialch
 	      		<li>
 	      			<a href="notas_venta.php">Notas de Venta</a>
 	      		</li>
+	      		<li>
+	      			<a href="ventas_credito.php">Créditos</a>
+	      		</li>
 	      	</ul>
 	      </div>
 	    </nav>

@@ -71,6 +71,9 @@ if ($varios_row) {
 	      		<li>
 	      			<a href="notas_venta.php">Notas de Venta</a>
 	      		</li>
+	      		<li>
+	      			<a href="ventas_credito.php">Créditos</a>
+	      		</li>
 	      	</ul>
 	      </div>
 	    </nav>
@@ -107,7 +110,7 @@ if ($varios_row) {
 											    		</div>
 											    		<div class="col-md-3">
 											    			<label for="exampleInputPassword1">Tipo</label>
-															    <select class="form-control" name="tipo">
+															    <select class="form-control" name="tipo" id="tipo">
 															    	<option value="1">Contado</option>
 															    	<option value="2">Crédito</option>
 															    </select>
@@ -122,6 +125,12 @@ if ($varios_row) {
 																	<option value="5">Yape></option>
 																	<option value="6">Transferencia</option>
 															    </select>
+											    		</div>
+											    		<div class="col-md-3" id="campo_fecha_pago" style="display:none;">
+											    			<div class="form-group">
+											    				<label>Fecha de pago</label>
+											    				<input type="date" class="form-control" name="fecha_pago" id="fecha_pago">
+											    			</div>
 											    		</div>
 											    		<div class="col-md-12">
 											    			<h3 class="text-center">Items</h3>
@@ -251,7 +260,17 @@ if ($varios_row) {
 		    }           
 		} );     
 
-		$('#datos').DataTable({
+		// Mostrar/ocultar fecha_pago según tipo
+	$('#tipo').on('change', function() {
+		if ($(this).val() === '2') {
+			$('#campo_fecha_pago').show();
+		} else {
+			$('#campo_fecha_pago').hide();
+			$('#fecha_pago').val('');
+		}
+	});
+
+	$('#datos').DataTable({
 			processing: true,
 			serverSide: true,
 			ajax: {
