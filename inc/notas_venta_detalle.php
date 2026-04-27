@@ -6,7 +6,7 @@ $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if (!$id) { echo json_encode(['error' => 'ID inválido']); exit; }
 
 $db  = Sdba::db();
-$sql = "SELECT dv.cantidad, dv.precio, dv.total, dv.exonerada,
+$sql = "SELECT dv.cantidad, dv.precio, dv.total,
                p.nom_prod, p.codigo_producto,
                u.codigo as unidad_codigo
         FROM detalle_ventas dv
