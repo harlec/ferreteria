@@ -15,7 +15,11 @@ if (isset($_POST) && !empty($_POST)) {
 	$fecha = $_POST['fecha'];
 	$cliente = $_POST['cliente'];
 	$tipo = $_POST['tipo'];
-	$forma = $_POST['forma'];
+	// Pagos multiples
+	$pf = isset($_POST['pf']) ? $_POST['pf'] : array();
+	$pm = isset($_POST['pm']) ? $_POST['pm'] : array();
+	// Forma principal (primer pago) para ventas.forma
+	$forma = !empty($pf) ? intval($pf[0]) : 1;
 	$fecha_pago = isset($_POST['fecha_pago']) && $_POST['fecha_pago'] != '' ? $_POST['fecha_pago'] : null;
 	$fecha_ope = date("Y-m-d H:i:s");
 	$id_p = $_POST['id_pro'];
@@ -78,6 +82,15 @@ if (isset($_POST) && !empty($_POST)) {
 			$data = array('id_venta'=>'','fecha'=> $fecha,'fecha_ope'=>$fecha_ope,'total'=>$total,'cliente'=>$cliente,'usuario'=>$id_usuario,'tipo'=>$tipo,'forma'=>$forma,'fecha_pago'=>$fecha_pago,'estado'=>'0');
 			$ventas->insert($data);
 			$venta_id = $ventas->insert_id();
+			// Guardar pagos múltiples
+			for ($pi = 0; $pi < count($pf); $pi++) {
+				$p_forma = intval($pf[$pi]);
+				$p_monto = floatval($pm[$pi]);
+				if ($p_forma > 0 && $p_monto > 0) {
+					$pago = Sdba::table('pagos');
+					$pago->insert(array('id_pago'=>'','venta'=>$venta_id,'forma'=>$p_forma,'monto'=>$p_monto));
+				}
+			}
 			if ($venta_id) {
 				$respuestaOk = true;
 				$mensajeError = 'entro';

@@ -92,6 +92,19 @@ $sql = "SELECT * FROM ({$union_sql}) AS t {$comp_filter_venta} {$search_where}
 
 $data = $db->query($sql)->result();
 
+// Pre-cargar pagos_count para ventas de esta página
+$pagos_count_map = [];
+$venta_ids_pagina = array_filter(array_map(function($r) {
+    return $r['origen'] === 'venta' ? intval($r['id_venta']) : 0;
+}, $data));
+if (!empty($venta_ids_pagina)) {
+    $ids_str_p = implode(',', $venta_ids_pagina);
+    $pagos_data = $db->query("SELECT venta, COUNT(*) as cnt, GROUP_CONCAT(forma) as formas FROM pagos WHERE venta IN ({$ids_str_p}) GROUP BY venta")->result();
+    foreach ($pagos_data as $pr) {
+        $pagos_count_map[$pr['venta']] = intval($pr['cnt']);
+    }
+}
+
 // Mapas
 $tipos_pago = ['1'=>'Contado', '2'=>'Crédito'];
 $formas_pago = ['1'=>'Efectivo','2'=>'Tar. Débito','3'=>'Tar. Crédito','4'=>'Crédito','5'=>'Yape','6'=>'Transferencia'];
@@ -103,7 +116,12 @@ foreach ($data as $row) {
     $origen = $row['origen'];
 
     $tipo  = isset($tipos_pago[$row['tipo']]) ? $tipos_pago[$row['tipo']] : '';
-    $forma = isset($formas_pago[$row['forma']]) ? $formas_pago[$row['forma']] : '';
+    // Determinar forma: si tiene pagos en tabla pagos, usar eso; si no, usar ventas.forma
+    if ($origen === 'venta' && isset($pagos_count_map[$id])) {
+        $forma = $pagos_count_map[$id] > 1 ? '<span class="label label-warning">Mixto</span>' : (isset($formas_pago[$row['forma']]) ? $formas_pago[$row['forma']] : '');
+    } else {
+        $forma = isset($formas_pago[$row['forma']]) ? $formas_pago[$row['forma']] : '';
+    }
 
     // Badge proforma
     if ($origen === 'proforma') {

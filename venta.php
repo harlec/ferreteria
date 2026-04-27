@@ -123,16 +123,20 @@ if ($varios_row) {
 															</div>
 															</div>
 											    		</div>
-											    		<div class="col-md-3">
-											    			<label for="exampleInputPassword1">Forma</label>
-															    <select class="form-control" name="forma">
-															    	<option value="1">Efectivo</option>
-															    	<option value="2">Tar. Debito</option>
-															    	<option value="3">Tar. Credito</option>
-															    	<option value="4">Crédito</option>
-																	<option value="5">Yape></option>
-																	<option value="6">Transferencia</option>
-															    </select>
+											    		<div class="col-md-12">
+											    			<label><strong>Formas de Pago</strong></label>
+											    			<table class="table table-condensed" id="tabla-pagos" style="margin-bottom:5px;">
+																<thead><tr><th>Forma</th><th>Monto (S/)</th><th></th></tr></thead>
+																<tbody id="filas-pagos"></tbody>
+															</table>
+											    			<div class="row">
+																<div class="col-xs-6">
+																	<button type="button" id="btn_agregar_pago" class="btn btn-default btn-sm"><i class="fas fa-plus"></i> Agregar pago</button>
+																</div>
+																<div class="col-xs-6 text-right">
+																	Restante: <strong id="pago-restante" style="color:red;">S/ 0.00</strong>
+																</div>
+															</div>
 											    		</div>
 											    		
 											    		<div class="col-md-12">
@@ -273,7 +277,53 @@ if ($varios_row) {
 		}
 	});
 
-	$('#datos').DataTable({
+
+	var FORMAS_OPTIONS = '<option value="1">Efectivo</option><option value="2">Tar. Débito</option><option value="3">Tar. Crédito</option><option value="5">Yape</option><option value="6">Transferencia</option>';
+
+	function agregarFilaPago(forma, monto) {
+		var html = '<tr>' +
+			'<td><select class="form-control input-sm pago-forma" name="pf[]">' + FORMAS_OPTIONS + '</select></td>' +
+			'<td><input type="number" class="form-control input-sm pago-monto" name="pm[]" min="0" step="0.01" value="' + (monto || '') + '"></td>' +
+			'<td><button type="button" class="btn btn-danger btn-sm btn-quitar-pago"><i class="fas fa-times"></i></button></td>' +
+			'</tr>';
+		var $tr = $(html);
+		if (forma) $tr.find('.pago-forma').val(forma);
+		$('#filas-pagos').append($tr);
+		recalcularRestante();
+	}
+
+	function recalcularRestante() {
+		var total = parseFloat($('#total').val()) || 0;
+		var sumaPagos = 0;
+		$('.pago-monto').each(function() { sumaPagos += parseFloat($(this).val()) || 0; });
+		var restante = (total - sumaPagos).toFixed(2);
+		$('#pago-restante').text('S/ ' + restante);
+		$('#pago-restante').css('color', parseFloat(restante) == 0 ? 'green' : 'red');
+	}
+
+	$('#btn_agregar_pago').on('click', function() { agregarFilaPago(1, ''); });
+
+	$(document).on('click', '.btn-quitar-pago', function() {
+		$(this).closest('tr').remove();
+		recalcularRestante();
+	});
+
+	$(document).on('input change', '.pago-monto', recalcularRestante);
+
+	// Actualizar restante cuando cambia el total de la venta
+	$('#total').on('change keyup', function() {
+		// Si solo hay 1 fila de pago, auto-completar su monto con el total
+		if ($('#filas-pagos tr').length === 1) {
+			$('.pago-monto').first().val(parseFloat($(this).val()).toFixed(2));
+		}
+		recalcularRestante();
+	});
+
+
+	// Inicializar un pago por defecto
+	agregarFilaPago(1, '');
+
+		$('#datos').DataTable({
 			processing: true,
 			serverSide: true,
 			ajax: {
@@ -484,12 +534,20 @@ if ($varios_row) {
 		$('body').on('click',"#guardar_venta", function(e){
           e.preventDefault();
 
-				
-				//var tipoVenta = $('input:radio[name=pregunta]:checked').val();
-				//DNI = $('#dni_ruc').val();
+				// Validar pagos
+				var total = parseFloat($('#total').val()) || 0;
+				var sumaPagos = 0;
+				$('.pago-monto').each(function() { sumaPagos += parseFloat($(this).val()) || 0; });
+				if (Math.abs(sumaPagos - total) > 0.01) {
+					swal('Advertencia', 'La suma de pagos (S/ ' + sumaPagos.toFixed(2) + ') debe ser igual al total (S/ ' + total.toFixed(2) + ')', 'warning');
+					return;
+				}
+				if ($('#filas-pagos tr').length === 0) {
+					swal('Advertencia', 'Debe agregar al menos una forma de pago', 'warning');
+					return;
+				}
 
 				var str2 = $('#venta').serialize();
-				alert(str2);
 				
 				$.ajax({
 					cache: false,
