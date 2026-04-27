@@ -114,12 +114,13 @@ if ($varios_row) {
 															    	<option value="1">Contado</option>
 															    	<option value="2">Crédito</option>
 															    </select>
-
+															<div class="row">
 															<div class="col-md-12" id="campo_fecha_pago" style="display:none;">
 																<div class="form-group">
 																	<label>Fecha de pago</label>
 																	<input type="date" class="form-control" name="fecha_pago" id="fecha_pago">
 																</div>
+															</div>
 															</div>
 											    		</div>
 											    		<div class="col-md-3">
