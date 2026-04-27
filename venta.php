@@ -114,6 +114,13 @@ if ($varios_row) {
 															    	<option value="1">Contado</option>
 															    	<option value="2">Crédito</option>
 															    </select>
+
+															<div class="col-md-12" id="campo_fecha_pago" style="display:none;">
+																<div class="form-group">
+																	<label>Fecha de pago</label>
+																	<input type="date" class="form-control" name="fecha_pago" id="fecha_pago">
+																</div>
+															</div>
 											    		</div>
 											    		<div class="col-md-3">
 											    			<label for="exampleInputPassword1">Forma</label>
@@ -126,12 +133,7 @@ if ($varios_row) {
 																	<option value="6">Transferencia</option>
 															    </select>
 											    		</div>
-											    		<div class="col-md-3" id="campo_fecha_pago" style="display:none;">
-											    			<div class="form-group">
-											    				<label>Fecha de pago</label>
-											    				<input type="date" class="form-control" name="fecha_pago" id="fecha_pago">
-											    			</div>
-											    		</div>
+											    		
 											    		<div class="col-md-12">
 											    			<h3 class="text-center">Items</h3>
 											    			
