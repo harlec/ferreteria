@@ -61,12 +61,12 @@ foreach ($ventas_list as $value) {
 		$btn_despachar = '<button class="btn btn-sm btn-info btn-despachar" data-detalle="'.$id_det.'" data-pendiente="'.$pendiente.'" data-nombre="'.htmlspecialchars($value['nom_prod']).'"><i class="fas fa-truck"></i></button>';
 	}
 
-	$datos .='<tr class="'.$row_class.'">
+	$datos .='<tr id="row-'.$id_det.'" class="'.$row_class.'">
     			<th scope="row">'.$i.'</th>
     			<td>'.$value['nom_prod'].'</td>
     			<td>'.$value['cantidad'].'</td>
-    			<td>'.$despachado.'</td>
-    			<td>'.$pendiente.'</td>
+    			<td class="td-despachado">'.$despachado.'</td>
+    			<td class="td-pendiente">'.$pendiente.'</td>
     			<td>'.$value['precio'].'</td>
     			<td>'.$value['total'].'</td>
     			<td>'.$btn_despachar.'</td>
@@ -173,104 +173,114 @@ foreach ($ventas_list as $value) {
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	<script src="assets/js/sweetalert2.all.min.js"></script>
+	<!-- Flotante Generar Guía -->
+	<div id="panel-guia" style="display:none;position:fixed;bottom:20px;right:20px;z-index:9999;">
+		<button id="btn_generar_guia" class="btn btn-success btn-lg">
+			<i class="fas fa-file-alt"></i> Generar Guía (<span id="guia-count">0</span>)
+		</button>
+	</div>
+
 	<script>
 	$(document).ready(function() {
-		$('.btn-despachar').on('click', function() {
-			var detalle = $(this).data('detalle');
-			var pendiente = $(this).data('pendiente');
-			var nombre = $(this).data('nombre');
-			var venta = <?php echo $id; ?>;
+		var despachados_ids = [];
+		var venta_id = <?php echo $id; ?>;
+
+		function actualizarPanelGuia() {
+			if (despachados_ids.length > 0) {
+				$('#guia-count').text(despachados_ids.length);
+				$('#panel-guia').show();
+			} else {
+				$('#panel-guia').hide();
+			}
+		}
+
+		$(document).on('click', '.btn-despachar', function() {
+			var $btn = $(this);
+			var detalle  = $btn.data('detalle');
+			var pendiente = parseFloat($btn.data('pendiente'));
+			var nombre   = $btn.data('nombre');
 
 			Swal.fire({
 				title: 'Despachar: ' + nombre,
 				input: 'number',
 				inputLabel: 'Cantidad a despachar (max: ' + pendiente + ')',
 				inputValue: pendiente,
-				inputAttributes: {
-					min: 0.01,
-					max: pendiente,
-					step: 0.01
-				},
+				inputAttributes: { min: 0.01, max: pendiente, step: 0.01 },
 				showCancelButton: true,
 				confirmButtonText: 'Despachar',
 				cancelButtonText: 'Cancelar',
 				inputValidator: (value) => {
-					if (!value || value <= 0) {
-						return 'Ingrese una cantidad mayor a 0';
-					}
-					if (parseFloat(value) > pendiente) {
-						return 'No puede despachar mas de ' + pendiente;
-					}
+					if (!value || value <= 0) return 'Ingrese una cantidad mayor a 0';
+					if (parseFloat(value) > pendiente) return 'No puede despachar mas de ' + pendiente;
 				}
 			}).then((result) => {
-				if (result.isConfirmed) {
-					$.ajax({
-						type: 'POST',
-						url: '/inc/registrar_despacho.php',
-						data: {
-							detalle: detalle,
-							cantidad: result.value,
-							venta: venta
-						},
-						dataType: 'json',
-						success: function(data) {
-							if (data.success) {
-								Swal.fire({
-									title: 'Despachado!',
-									text: data.mensaje,
-									icon: 'success',
-									showCancelButton: true,
-									confirmButtonText: 'Ver Guía',
-									cancelButtonText: 'Continuar'
-								}).then((result) => {
-									if (result.isConfirmed) {
-										window.open('guia_entrega.php?venta=<?php echo $id; ?>&despacho=' + data.id_despacho, '_blank');
-									}
-									location.reload();
-								});
-							} else {
-								Swal.fire('Error', data.mensaje, 'error');
-							}
-						},
-						error: function() {
-							Swal.fire('Error', 'Error de conexion', 'error');
-						}
-					});
-				}
-			});
-		});
-		$('#btn_despachar_todo').on('click', function() {
-		Swal.fire({
-			title: 'Despachar TODO',
-			text: 'Se despachará todo lo pendiente y se generará la Guía de Entrega.',
-			icon: 'warning',
-			showCancelButton: true,
-			confirmButtonText: 'Sí, despachar todo',
-			cancelButtonText: 'Cancelar'
-		}).then((result) => {
-			if (result.isConfirmed) {
+				if (!result.isConfirmed) return;
+				var cantidad = parseFloat(result.value);
 				$.ajax({
 					type: 'POST',
-					url: '/inc/despachar_todo.php',
-					data: { venta: <?php echo $id; ?> },
+					url: '/inc/registrar_despacho.php',
+					data: { detalle: detalle, cantidad: cantidad, venta: venta_id },
 					dataType: 'json',
 					success: function(data) {
 						if (data.success) {
-							var ids = data.ids.join(',');
-							window.open('guia_entrega.php?venta=<?php echo $id; ?>&despachos=' + ids, '_blank');
+							despachados_ids.push(data.id_despacho);
+							actualizarPanelGuia();
+							// Actualizar fila sin recargar
+							var $row = $('#row-' + detalle);
+							var despAnt = parseFloat($row.find('.td-despachado').text()) || 0;
+							var nuevoDespachado = despAnt + cantidad;
+							var cantTotal = parseFloat($row.find('td:nth-child(3)').text());
+							var nuevoPendiente = cantTotal - nuevoDespachado;
+							$row.find('.td-despachado').text(nuevoDespachado);
+							$row.find('.td-pendiente').text(nuevoPendiente);
+							if (nuevoPendiente <= 0) {
+								$row.removeClass('warning').addClass('success');
+								$btn.remove();
+							} else {
+								$row.addClass('warning');
+								$btn.data('pendiente', nuevoPendiente);
+							}
+						} else {
+							Swal.fire('Error', data.mensaje, 'error');
+						}
+					},
+					error: function() { Swal.fire('Error', 'Error de conexion', 'error'); }
+				});
+			});
+		});
+
+		$('#btn_generar_guia').on('click', function() {
+			window.open('guia_entrega.php?venta=' + venta_id + '&despachos=' + despachados_ids.join(','), '_blank');
+		});
+
+		$('#btn_despachar_todo').on('click', function() {
+			Swal.fire({
+				title: 'Despachar TODO',
+				text: 'Se despachará todo lo pendiente y se generará la Guía de Entrega.',
+				icon: 'warning',
+				showCancelButton: true,
+				confirmButtonText: 'Sí, despachar todo',
+				cancelButtonText: 'Cancelar'
+			}).then((result) => {
+				if (!result.isConfirmed) return;
+				$.ajax({
+					type: 'POST',
+					url: '/inc/despachar_todo.php',
+					data: { venta: venta_id },
+					dataType: 'json',
+					success: function(data) {
+						if (data.success) {
+							window.open('guia_entrega.php?venta=' + venta_id + '&despachos=' + data.ids.join(','), '_blank');
 							location.reload();
 						} else {
 							Swal.fire('Aviso', data.mensaje, 'info');
 						}
 					},
-					error: function() {
-						Swal.fire('Error', 'Error de conexion', 'error');
-					}
+					error: function() { Swal.fire('Error', 'Error de conexion', 'error'); }
 				});
-			}
+			});
 		});
 	});
-});
 	</script>
 </body>
 </html>
