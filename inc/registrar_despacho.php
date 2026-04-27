@@ -61,7 +61,7 @@ $nuevo->insert($data);
 $nuevo_id = $nuevo->insert_id();
 
 if ($nuevo_id) {
-	echo json_encode(array('success' => true, 'mensaje' => 'Despacho registrado correctamente'));
+	echo json_encode(array('success' => true, 'mensaje' => 'Despacho registrado correctamente', 'id_despacho' => $nuevo_id));
 } else {
 	echo json_encode(array('success' => false, 'mensaje' => 'Error al registrar despacho'));
 }

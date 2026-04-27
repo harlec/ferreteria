@@ -153,6 +153,7 @@ foreach ($ventas_list as $value) {
 											    	<a class="btn btn-success btn-lg <?php echo $ocultar;?>" href="factura.php?id=<?php echo $id; ?>">Factura</a>
 												    <a class="btn btn-primary btn-lg <?php echo $ocultar;?>" href="boleta.php?id=<?php echo $id; ?>">Boleta</a>
 												    <a class="btn btn-primary btn-lg <?php echo $ocultar;?>" href="recibo.php?id=<?php echo $id; ?>">Recibo</a>
+												    <button type="button" id="btn_despachar_todo" class="btn btn-warning btn-lg">Despachar TODO y Generar Guía</button>
 												</center>
 											</div>
 										</div>
@@ -214,7 +215,17 @@ foreach ($ventas_list as $value) {
 						dataType: 'json',
 						success: function(data) {
 							if (data.success) {
-								Swal.fire('Despachado!', data.mensaje, 'success').then(() => {
+								Swal.fire({
+									title: 'Despachado!',
+									text: data.mensaje,
+									icon: 'success',
+									showCancelButton: true,
+									confirmButtonText: 'Ver Guía',
+									cancelButtonText: 'Continuar'
+								}).then((result) => {
+									if (result.isConfirmed) {
+										window.open('guia_entrega.php?venta=<?php echo $id; ?>&despacho=' + data.id_despacho, '_blank');
+									}
 									location.reload();
 								});
 							} else {
@@ -228,7 +239,38 @@ foreach ($ventas_list as $value) {
 				}
 			});
 		});
+		$('#btn_despachar_todo').on('click', function() {
+		Swal.fire({
+			title: 'Despachar TODO',
+			text: 'Se despachará todo lo pendiente y se generará la Guía de Entrega.',
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonText: 'Sí, despachar todo',
+			cancelButtonText: 'Cancelar'
+		}).then((result) => {
+			if (result.isConfirmed) {
+				$.ajax({
+					type: 'POST',
+					url: '/inc/despachar_todo.php',
+					data: { venta: <?php echo $id; ?> },
+					dataType: 'json',
+					success: function(data) {
+						if (data.success) {
+							var ids = data.ids.join(',');
+							window.open('guia_entrega.php?venta=<?php echo $id; ?>&despachos=' + ids, '_blank');
+							location.reload();
+						} else {
+							Swal.fire('Aviso', data.mensaje, 'info');
+						}
+					},
+					error: function() {
+						Swal.fire('Error', 'Error de conexion', 'error');
+					}
+				});
+			}
+		});
 	});
+});
 	</script>
 </body>
 </html>
