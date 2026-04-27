@@ -2,7 +2,9 @@
 session_start();
 include('sdba/sdba.php');
 
-$nombre = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
+$nombre   = isset($_POST['nombre'])    ? trim($_POST['nombre'])    : '';
+$telefono  = isset($_POST['telefono'])  ? trim($_POST['telefono'])  : '';
+$telefono2 = isset($_POST['telefono2']) ? trim($_POST['telefono2']) : '';
 
 if (empty($nombre)) {
 	echo json_encode(array('success' => false, 'mensaje' => 'Nombre requerido'));
@@ -11,12 +13,13 @@ if (empty($nombre)) {
 
 $clientes = Sdba::table('clientes');
 $data = array(
-	'id_cliente' => '',
-	'cliente' => $nombre,
-	'doc_identidad' => '',
-	'telefono' => '',
-	'email' => '',
-	'estado' => '1'
+	'id_cliente'   => '',
+	'cliente'      => $nombre,
+	'doc_identidad'=> '',
+	'telefono'     => $telefono,
+	'telefono2'    => $telefono2,
+	'email'        => '',
+	'estado'       => '1'
 );
 $clientes->insert($data);
 $nuevo_id = $clientes->insert_id();

@@ -419,15 +419,24 @@ if ($varios_row) {
 		$('#btn_nuevo_cliente').on('click', function() {
 			swal({
 				title: 'Nuevo Cliente',
-				input: 'text',
-				inputPlaceholder: 'Nombre del cliente',
+				html:
+					'<input id="swal-nombre" class="swal2-input" placeholder="Nombre *">' +
+					'<input id="swal-tel1" class="swal2-input" placeholder="Teléfono">' +
+					'<input id="swal-tel2" class="swal2-input" placeholder="Teléfono 2">',
 				showCancelButton: true,
 				confirmButtonText: 'Guardar',
 				cancelButtonText: 'Cancelar',
-				inputValidator: function(value) {
-					if (!value) {
-						return 'Ingrese un nombre';
+				preConfirm: function() {
+					var nombre = $('#swal-nombre').val().trim();
+					if (!nombre) {
+						swal.showValidationError('El nombre es requerido');
+						return false;
 					}
+					return {
+						nombre:    nombre,
+						telefono:  $('#swal-tel1').val().trim(),
+						telefono2: $('#swal-tel2').val().trim()
+					};
 				}
 			}).then(function(result) {
 				if (result.value) {
@@ -435,7 +444,7 @@ if ($varios_row) {
 						type: 'POST',
 						dataType: 'json',
 						url: '/inc/registrar_cliente_rapido.php',
-						data: { nombre: result.value },
+						data: result.value,
 						success: function(resp) {
 							if (resp.success) {
 								$('#cliente_texto').val(resp.nombre);
