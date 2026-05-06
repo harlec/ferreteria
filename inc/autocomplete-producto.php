@@ -2,17 +2,24 @@
 session_start();
 include('sdba/sdba.php');
 
-$nombre = isset($_GET['term']) ? $_GET['term'] : '';
+$nombre = isset($_GET['term']) ? trim($_GET['term']) : '';
 if ($nombre === '') { echo json_encode([]); exit; }
 
-$db   = Sdba::db();
-$safe = $db->escape('%' . $nombre . '%', true);
+$db      = Sdba::db();
+$palabras = array_filter(explode(' ', $nombre));
+
+$condiciones = [];
+foreach ($palabras as $p) {
+    $esc = $db->escape('%'.$p.'%', true);
+    $condiciones[] = "(CONCAT(p.nom_prod, ' ', IFNULL(m.marca,'')) LIKE '{$esc}')";
+}
+$where = implode(' AND ', $condiciones);
 
 $rows = $db->query("
     SELECT p.id_producto, p.nom_prod, IFNULL(m.marca,'') as marca
     FROM productos p
     LEFT JOIN marca m ON p.marca = m.id_marca
-    WHERE CONCAT(p.nom_prod, ' ', IFNULL(m.marca,'')) LIKE '{$safe}'
+    WHERE {$where}
     LIMIT 50
 ")->result();
 
