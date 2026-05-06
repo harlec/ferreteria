@@ -1,57 +1,31 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 session_start();
+include('sdba/sdba.php');
 
-include('sdba/sdba.php'); // include main file
-	
-	$nombre = $_GET['term'];
-	//$filtro = $_GET['filtro'];
-	//$accion = $_GET['accion'];
-	//$producto = $_GET['producto'];
+$nombre = isset($_GET['term']) ? $_GET['term'] : '';
+if ($nombre === '') { echo json_encode([]); exit; }
 
-	$clientes = Sdba::table('productos');
-	//$productos->where('cliente', $filtro);
-	//$clientes->distinct();
-	$clientes->like('nom_prod', $nombre);
-	//$clientes->distinct();
-	$clientes_list = $clientes->get();
+$db   = Sdba::db();
+$safe = $db->escape('%' . $nombre . '%', true);
 
-	foreach ($clientes_list as  $value) {
+$rows = $db->query("
+    SELECT p.id_producto, p.nom_prod, IFNULL(m.marca,'') as marca
+    FROM productos p
+    LEFT JOIN marca m ON p.marca = m.id_marca
+    WHERE CONCAT(p.nom_prod, ' ', IFNULL(m.marca,'')) LIKE '{$safe}'
+    LIMIT 50
+")->result();
 
-		$marca = Sdba::table('marca');
-		$marca->where('id_marca',$value['marca']);
-		//$marca->order_by('id_stock','desc');
-		$marca1 = $marca->get_one();
-		$marcan = $marca1['marca'];
+$cliente = [];
+foreach ($rows as $value) {
+    $variantes = Sdba::table('variantes');
+    $variantes->where('producto', $value['id_producto']);
+    $v = $variantes->get();
+    foreach ($v as $key) {
+        $lote = ($key['variante'] == '0000-00-00') ? '-' : $key['variante'];
+        $cliente[] = $value['nom_prod'] . '-' . $value['marca'] . '-' . $lote;
+    }
+}
 
-
-		$variantes = Sdba::table('variantes');
-		$variantes->where('producto', $value['id_producto']);
-		$v = $variantes->get();
-		foreach ($v as $key) {
-			if ($key['variante']=='0000-00-00') {
-				$lote = '-';
-			}
-			else{
-				$lote = $key['variante'];
-			}
-			
-			$cliente[] = $value['nom_prod'].'-'.$marcan.'-'.$lote;
-		}
-
-		//echo $key.'<br>';
-		
-		//$precio = $value['precio'];
-		//echo $value['name_product'].'<br>';
-
-	}
-
-	
-
-
-	
-	echo json_encode($cliente);
-
+echo json_encode($cliente);
 ?>
