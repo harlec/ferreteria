@@ -350,16 +350,11 @@ if ($varios_row) {
 		    var stock = $(this).closest('tr').find('.stock').text();
 		    var cantidad = 1;
 		    var id_p = $(this).val();
-		    var monto = precio;
+		    var monto = parseFloat(precio).toFixed(2);
 
 			$('input[type=search]').val('');
-		    total = monto*1 + total*1;
-
-		    //alert(stock);
-		    console.log(stock);
 		    if (stock <=0) {
 		    	swal('Advertencia','No puedes agregar, no tienes stock.','warning');
-		    	
 		    }
 		    else{
 		    	$('#items tr:last').after('<tr class="child"><input type="hidden" class="stocki" value="'+stock+'" name="stock[]" ><input type="hidden" value="'+id_p+'" name="id_pro[]" ><td><input class="cantidad" type="number" max="'+stock+'" value="'+cantidad+'" name="cantidad[]"></td><td style="text-transform:uppercase;">'+nombre+'</td><td style="text-transform:uppercase;">'+unidad+'</td><td><input type="number" class="pre" value="'+precio+'" name="precio[]"></td><td ><input class="mon" type="text" value="'+monto+'" name="total_pre[]" ></td><td><button value="'+monto+'" class="borrar">x</button></td></tr>');
@@ -369,60 +364,43 @@ if ($varios_row) {
 
 
 		});
-	    //borrar item
-	    $("#items").on('click', '.borrar', function () {
-		    //$(this).closest('tr').remove();
-		    
-		    var resta = $(this).val();
-		    console.log(resta)
-		    $(this).parents("tr").remove();
-		    total = (total - resta*1).toFixed(2);
+		// Recalcula el total sumando todos los .mon del listado
+		function recalcularTotal() {
+			var suma = 0;
+			$('.mon').each(function() { suma += parseFloat($(this).val()) || 0; });
+			total = parseFloat(suma.toFixed(2));
+			$("#total").val(total.toFixed(2));
+			// Actualizar panel de pagos
+			if ($('#filas-pagos tr').length === 1) {
+				$('.pago-monto').first().val(total.toFixed(2));
+			}
+			recalcularRestante();
+		}
 
-		    $("#total").val(total);
-		});
-		//actualizar item
-		var monto1 = 0;
-		$('body').on('change paste keyup',".cantidad", function(){
-			var stock = $(this).closest('tr').find('.stocki').val();
-			var cantidad = $(this).closest('tr').find('.cantidad').val();
-			console.log(stock);
-			console.log(cantidad);
-			//if (cantidad <= stock ) {
-				//$('.cantidad').on('change paste keyup', function(){
-				var anterior = $(this).closest('tr').find('.mon').val();
-				var precio = $(this).closest('tr').find('.pre').val();
-				
-				var monto1 =  precio*cantidad;
-
-
-				total = (total - anterior + monto1).toFixed(2);
-				monto1 = monto1.toFixed(2);
-				$("#total").val(total);
-				
-				//alert(monto1);
-				$(this).closest('tr').find('.mon').val(monto1);
-				$(this).closest('tr').find('.borrar').val(monto1);
-			//}
-			//else{
-				//alert('No cuenta con esa cantidad');
-				console.log('no cuenta');
-			//}
+		// Borrar item
+		$("#items").on('click', '.borrar', function() {
+			$(this).parents("tr").remove();
+			recalcularTotal();
 		});
 
-		$('body').on('change paste keyup',".pre", function(){
-		//$('.cantidad').on('change paste keyup', function(){
-			var anterior = $(this).closest('tr').find('.mon').val();
-			var precio = $(this).closest('tr').find('.pre').val();
-			var cantidad = $(this).closest('tr').find('.cantidad').val();
-			var monto1 =  precio*cantidad;
+		// Cambio de cantidad
+		$('body').on('change paste keyup', ".cantidad", function(){
+			var precio   = parseFloat($(this).closest('tr').find('.pre').val())   || 0;
+			var cantidad = parseFloat($(this).closest('tr').find('.cantidad').val()) || 0;
+			var monto    = parseFloat((precio * cantidad).toFixed(2));
+			$(this).closest('tr').find('.mon').val(monto.toFixed(2));
+			$(this).closest('tr').find('.borrar').val(monto.toFixed(2));
+			recalcularTotal();
+		});
 
-			total = (total - anterior + monto1).toFixed(2);
-			$("#total").val(total);
-			
-			//alert(monto1);
-			monto1 = monto1.toFixed(2);
-			$(this).closest('tr').find('.mon').val(monto1);
-			$(this).closest('tr').find('.borrar').val(monto1);
+		// Cambio de precio
+		$('body').on('change paste keyup', ".pre", function(){
+			var precio   = parseFloat($(this).closest('tr').find('.pre').val())   || 0;
+			var cantidad = parseFloat($(this).closest('tr').find('.cantidad').val()) || 0;
+			var monto    = parseFloat((precio * cantidad).toFixed(2));
+			$(this).closest('tr').find('.mon').val(monto.toFixed(2));
+			$(this).closest('tr').find('.borrar').val(monto.toFixed(2));
+			recalcularTotal();
 		});
 
 

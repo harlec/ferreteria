@@ -60,7 +60,7 @@ $facturan = 0;
 		$tot = $tot + $key['total'];
 		$mostrar_de_venta .= '<tr>
 								<td>['.$key["cantidad"].']'.$key['nom_prod'].'</td>
-								<td style="text-align: right;" >'.number_format($key['precio_venta'],2,'.',',').'</td>
+								<td style="text-align: right;" >'.number_format($key['precio'],2,'.',',').'</td>
 								<td style="text-align: right;"  > '.number_format($key["total"],2,'.',',').'</td>
 							</tr>';
 		$i++;
