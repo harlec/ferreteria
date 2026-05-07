@@ -27,8 +27,8 @@ if (!empty($detalle_ids)) {
 	}
 }
 
-//print_r($ventas_list);
 $ocultar = '';
+$hay_despachos = !empty($desp_list);
 $ventas1 = Sdba::table('ventas');
 $ventas1->where('id_venta', $id);
 $ventas_list1 = $ventas1->get_one();
@@ -154,6 +154,9 @@ foreach ($ventas_list as $value) {
 												    <a class="btn btn-primary btn-lg <?php echo $ocultar;?>" href="boleta.php?id=<?php echo $id; ?>">Boleta</a>
 												    <a class="btn btn-primary btn-lg <?php echo $ocultar;?>" href="recibo.php?id=<?php echo $id; ?>">Recibo</a>
 												    <button type="button" id="btn_despachar_todo" class="btn btn-warning btn-lg">Despachar TODO y Generar Guía</button>
+												    <?php if ($hay_despachos): ?>
+												    <a href="guia_entrega.php?venta=<?php echo $id; ?>&despachado=1" target="_blank" class="btn btn-default btn-lg"><i class="fas fa-file-alt"></i> Ver Guía de Entrega</a>
+												    <?php endif; ?>
 												</center>
 											</div>
 										</div>
@@ -270,7 +273,8 @@ foreach ($ventas_list as $value) {
 					dataType: 'json',
 					success: function(data) {
 						if (data.success) {
-							window.open('guia_entrega.php?venta=' + venta_id + '&despachos=' + data.ids.join(','), '_blank');
+							// Usar modo todo=1: muestra todos los items del pedido completo
+							window.open('guia_entrega.php?venta=' + venta_id + '&todo=1', '_blank');
 							location.reload();
 						} else {
 							Swal.fire('Aviso', data.mensaje, 'info');
