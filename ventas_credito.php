@@ -5,56 +5,81 @@ include('inc/sdba/sdba.php');
 $hoy = date('Y-m-d');
 $db  = Sdba::db();
 
-$sql = "SELECT v.id_venta, v.fecha, v.total, v.fecha_pago,
-               cl.cliente as nombre_cliente
+$sql = "SELECT v.id_venta, v.fecha, v.total, v.fecha_pago, v.pagado, v.fecha_pagado,
+               IFNULL(cl.cliente,'VARIOS') as nombre_cliente,
+               IFNULL(cl.telefono,'') as telefono
         FROM ventas v
         LEFT JOIN clientes cl ON v.cliente = cl.id_cliente
         WHERE v.tipo = '2' AND v.estado != '2'
-        ORDER BY v.fecha_pago ASC, v.id_venta DESC";
+        ORDER BY v.pagado ASC, v.fecha_pago ASC, v.id_venta DESC";
 
 $ventas_list = $db->query($sql)->result();
 
 $filas = '';
 $i = 1;
 foreach ($ventas_list as $v) {
-    $id          = $v['id_venta'];
-    $fecha_pago  = $v['fecha_pago'];
-    $partes      = explode(' ', trim($v['nombre_cliente'] ?? 'VARIOS'));
-    $cliente     = strtoupper(implode(' ', array_slice($partes, 0, 2)));
+    $id         = $v['id_venta'];
+    $fecha_pago = $v['fecha_pago'];
+    $pagado     = intval($v['pagado']);
+    $partes     = explode(' ', trim($v['nombre_cliente']));
+    $cliente    = strtoupper(implode(' ', array_slice($partes, 0, 2)));
+    $telefono   = $v['telefono'] ? '<br><small class="text-muted">'.$v['telefono'].'</small>' : '';
 
-    // Estado de vencimiento
-    $badge = '';
-    $row_class = '';
-    if ($fecha_pago && $fecha_pago !== '0000-00-00') {
-        $diff = (strtotime($fecha_pago) - strtotime($hoy)) / 86400;
-        if ($diff < 0) {
-            $dias = abs((int)$diff);
-            $badge = '<span class="label label-danger">Vencido hace '.$dias.' día'.($dias!=1?'s':'').'</span>';
-            $row_class = 'danger';
-        } elseif ($diff == 0) {
-            $badge = '<span class="label label-warning">Vence hoy</span>';
-            $row_class = 'warning';
-        } elseif ($diff <= 7) {
-            $badge = '<span class="label label-warning">Vence en '.(int)$diff.' día'.($diff!=1?'s':'').'</span>';
-            $row_class = 'warning';
-        } else {
-            $badge = '<span class="label label-success">En '.(int)$diff.' días</span>';
-        }
-        $fecha_pago_fmt = date('d/m/Y', strtotime($fecha_pago));
+    if ($pagado) {
+        // Fila pagada
+        $badge     = '<span class="label label-success"><i class="fas fa-check"></i> Pagado</span>';
+        $row_class = 'success';
+        $fecha_pago_fmt = $fecha_pago && $fecha_pago !== '0000-00-00'
+            ? date('d/m/Y', strtotime($fecha_pago)) : '-';
+        $fecha_pagado_fmt = $v['fecha_pagado']
+            ? '<br><small>Pagó: '.date('d/m/Y', strtotime($v['fecha_pagado'])).'</small>' : '';
+        $btn_pago  = '<span class="text-success"><i class="fas fa-check-circle"></i></span>';
     } else {
-        $badge = '<span class="label label-default">Sin fecha</span>';
-        $fecha_pago_fmt = '-';
+        // Fila pendiente — calcular vencimiento
+        if ($fecha_pago && $fecha_pago !== '0000-00-00') {
+            $diff = (strtotime($fecha_pago) - strtotime($hoy)) / 86400;
+            if ($diff < 0) {
+                $dias = abs((int)$diff);
+                $badge = '<span class="label label-danger">Vencido hace '.$dias.' día'.($dias!=1?'s':'').'</span>';
+                $row_class = 'danger';
+            } elseif ($diff == 0) {
+                $badge = '<span class="label label-warning">Vence hoy</span>';
+                $row_class = 'warning';
+            } elseif ($diff <= 7) {
+                $badge = '<span class="label label-warning">Vence en '.(int)$diff.' día'.($diff!=1?'s':'').'</span>';
+                $row_class = 'warning';
+            } else {
+                $badge = '<span class="label label-success">En '.(int)$diff.' días</span>';
+                $row_class = '';
+            }
+            $fecha_pago_fmt = date('d/m/Y', strtotime($fecha_pago));
+        } else {
+            $badge = '<span class="label label-default">Sin fecha</span>';
+            $row_class = '';
+            $fecha_pago_fmt = '-';
+        }
+        $fecha_pagado_fmt = '';
+        $btn_pago = '<button class="btn btn-success btn-xs btn-marcar-pagado"
+            data-id="'.$id.'"
+            data-total="'.number_format(floatval($v['total']),2,'.','').'"
+            data-cliente="'.htmlspecialchars($cliente).'"
+            title="Marcar como pagado">
+            <i class="fas fa-dollar-sign"></i> Cobrado
+        </button>';
     }
 
-    $filas .= '<tr class="'.$row_class.'">
+    $filas .= '<tr class="'.$row_class.'" id="fila-'.$id.'">
         <td>'.$i.'</td>
         <td>v-'.$id.'</td>
         <td>'.date('d/m/Y', strtotime($v['fecha'])).'</td>
-        <td>'.$cliente.'</td>
+        <td>'.$cliente.$telefono.'</td>
         <td>S/ '.number_format(floatval($v['total']), 2).'</td>
-        <td>'.$fecha_pago_fmt.'</td>
+        <td>'.$fecha_pago_fmt.$fecha_pagado_fmt.'</td>
         <td>'.$badge.'</td>
-        <td><a class="btn btn-primary btn-xs" href="ver_venta.php?id='.$id.'" title="Ver venta"><i class="fas fa-eye"></i></a></td>
+        <td>
+            <a class="btn btn-primary btn-xs" href="ver_venta.php?id='.$id.'" title="Ver venta"><i class="fas fa-eye"></i></a>
+            '.$btn_pago.'
+        </td>
     </tr>';
     $i++;
 }
@@ -70,6 +95,7 @@ foreach ($ventas_list as $v) {
     <link rel="stylesheet" href="/assets/css/custom.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="/assets/css/sweetalert2.min.css">
 </head>
 <body class="mobile dashboard">
 <div class="">
@@ -114,7 +140,7 @@ foreach ($ventas_list as $v) {
                                                 <th>Fecha</th>
                                                 <th>Cliente</th>
                                                 <th>Total</th>
-                                                <th>Fecha de Pago</th>
+                                                <th>Fecha Pago Acordada</th>
                                                 <th>Estado</th>
                                                 <th>Opciones</th>
                                             </tr>
@@ -135,6 +161,7 @@ foreach ($ventas_list as $v) {
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="/assets/js/sweetalert2.all.min.js"></script>
 <script src="//cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
 <script>
 $(document).ready(function() {
@@ -150,7 +177,67 @@ $(document).ready(function() {
             emptyTable: "No hay ventas a crédito"
         }
     });
-    $('#datos').DataTable({ order: [[5, 'asc']] });
+    $('#datos').DataTable({ order: [[6, 'asc'], [5, 'asc']] });
+
+    $(document).on('click', '.btn-marcar-pagado', function() {
+        var ventaId = $(this).data('id');
+        var total   = $(this).data('total');
+        var cliente = $(this).data('cliente');
+        var hoy     = new Date().toISOString().split('T')[0];
+
+        Swal.fire({
+            title: 'Registrar pago',
+            html:
+                '<p><strong>' + cliente + '</strong> — S/ ' + total + '</p>' +
+                '<div class="row" style="text-align:left;">' +
+                    '<div class="col-xs-6"><label>Forma de pago</label>' +
+                    '<select id="swal-forma" class="form-control">' +
+                        '<option value="1">Efectivo</option>' +
+                        '<option value="2">Tar. Débito</option>' +
+                        '<option value="3">Tar. Crédito</option>' +
+                        '<option value="5">Yape</option>' +
+                        '<option value="6">Transferencia</option>' +
+                    '</select></div>' +
+                    '<div class="col-xs-6"><label>Fecha de pago</label>' +
+                    '<input type="date" id="swal-fecha" class="form-control" value="' + hoy + '"></div>' +
+                '</div>',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-check"></i> Confirmar cobro',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#5cb85c',
+            preConfirm: function() {
+                return {
+                    forma: $('#swal-forma').val(),
+                    fecha: $('#swal-fecha').val()
+                };
+            }
+        }).then(function(result) {
+            if (!result.value) return;
+            $.ajax({
+                type: 'POST',
+                url: '/inc/marcar_pagado.php',
+                data: {
+                    venta: ventaId,
+                    forma: result.value.forma,
+                    monto: total,
+                    fecha: result.value.fecha
+                },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        // Actualizar fila sin recargar
+                        var $fila = $('#fila-' + ventaId);
+                        $fila.removeClass('danger warning').addClass('success');
+                        $fila.find('td:eq(6)').html('<span class="label label-success"><i class="fas fa-check"></i> Pagado</span>');
+                        $fila.find('td:eq(7)').html('<span class="text-success"><i class="fas fa-check-circle"></i></span> <a class="btn btn-primary btn-xs" href="ver_venta.php?id=' + ventaId + '"><i class="fas fa-eye"></i></a>');
+                    } else {
+                        Swal.fire('Error', data.mensaje, 'error');
+                    }
+                },
+                error: function() { Swal.fire('Error', 'Error de conexion', 'error'); }
+            });
+        });
+    });
 });
 </script>
 </body>
