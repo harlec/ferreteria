@@ -123,8 +123,8 @@ tbody td { font-size: 10px; }
 use Dompdf\Dompdf;
 $dompdf = new DOMPDF();
 $dompdf->load_html(ob_get_clean());
-// Papel A4 para soportar muchos items (595 x 842 puntos)
-$dompdf->set_paper('A4', 'portrait');
+// Formato ticket 80mm de ancho, altura suficiente para muchos items
+$dompdf->set_paper(array(0, 0, 226, 2000));
 $dompdf->render();
 $dompdf->stream('guia_entrega.pdf');
 ?>
