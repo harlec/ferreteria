@@ -20,7 +20,7 @@ $columnsOrder = [
     5 => 'c.nom_cat',
     6 => 'co.color',
     7 => 'p.exonerada',
-    8 => 'p.stockp',
+    8 => 'stock_actual',  // Cambiar para usar el stock real
     9 => 'p.precio_venta'
 ];
 
@@ -65,7 +65,8 @@ $countResult = $db->query($sqlCount)->row();
 $filteredRecords = (int)$countResult['total'];
 
 // Query principal con paginacion
-$sql = "SELECT p.*, c.nom_cat, m.marca, co.color, u.nombre as unidad_nombre
+$sql = "SELECT p.*, c.nom_cat, m.marca, co.color, u.nombre as unidad_nombre,
+               IFNULL((SELECT stockt FROM stock WHERE producto = p.id_producto ORDER BY id_stock DESC LIMIT 1), 0) as stock_actual
     FROM productos p
     LEFT JOIN categorias c ON p.categoria = c.id_categoria
     LEFT JOIN marca m ON p.marca = m.id_marca
@@ -80,7 +81,7 @@ $data = $db->query($sql)->result();
 // Formato de respuesta
 $result = [];
 foreach ($data as $row) {
-    $stockt = $row['stockp'];
+    $stockt = $row['stock_actual'];  // Usar stock real desde tabla stock
     $stockClass = ($stockt <= 4) ? 'style="color:red"' : '';
 
     $result[] = [

@@ -23,7 +23,6 @@ if (isset($_POST) && !empty($_POST)) {
 	$fecha_pago = isset($_POST['fecha_pago']) && $_POST['fecha_pago'] != '' ? $_POST['fecha_pago'] : null;
 	$fecha_ope = date("Y-m-d H:i:s");
 	$id_p = $_POST['id_pro'];
-	$fv= $_POST['fv'];
 	$precio = $_POST['precio'];
 	$cantidad = $_POST['cantidad'];
 	//$monto = $_POST['monto'];
@@ -36,13 +35,6 @@ if (isset($_POST) && !empty($_POST)) {
 
 	if (!empty($fecha) && !empty($id_p) && !empty($total_pre)) {
 
-			// Normalizar fv antes de las consultas batch
-			for ($i=0; $i < count($id_p); $i++) {
-				if($fv[$i]=='-'){
-					$fv[$i] = '0000-00-00';
-				}
-			}
-
 			// Pre-cargar stock total por producto (más reciente)
 			$stock_total_map = array();
 			$stock_q = Sdba::table('stock');
@@ -53,29 +45,6 @@ if (isset($_POST) && !empty($_POST)) {
 				if (!isset($stock_total_map[$s['producto']])) {
 					$stock_total_map[$s['producto']] = floatval($s['stockt']);
 				}
-			}
-
-			// Pre-cargar stock por lote (producto + fv)
-			$stock_lote_map = array();
-			$stock_q2 = Sdba::table('stock');
-			$stock_q2->where_in('producto', $id_p);
-			$stock_q2->order_by('id_stock','desc');
-			$stock_list2 = $stock_q2->get();
-			foreach ($stock_list2 as $s) {
-				$key = $s['producto'] . '_' . $s['fv'];
-				if (!isset($stock_lote_map[$key])) {
-					$stock_lote_map[$key] = floatval($s['stock']);
-				}
-			}
-
-			// Pre-cargar variantes
-			$variantes_map = array();
-			$var_q = Sdba::table('variantes');
-			$var_q->where_in('producto', $id_p);
-			$var_list = $var_q->get();
-			foreach ($var_list as $vr) {
-				$key = $vr['producto'] . '_' . $vr['variante'];
-				$variantes_map[$key] = $vr['id_variante'];
 			}
 
 			$ventas = Sdba::table('ventas');
@@ -98,7 +67,6 @@ if (isset($_POST) && !empty($_POST)) {
 				//guardamos en tabla detalle de venta
 				for ($i=0; $i < count($id_p) ; $i++) {
 					$prod_id = $id_p[$i];
-					$prod_fv = $fv[$i];
 					$prod_cant = floatval($cantidad[$i]);
 
 					//guardamos el detalle de las ventas
@@ -111,25 +79,11 @@ if (isset($_POST) && !empty($_POST)) {
 					$stocktot = $cstock_total - $prod_cant;
 					$stock_total_map[$prod_id] = $stocktot; // Actualizar mapa para siguiente iteración del mismo producto
 
-					// Calcular nuevo stock por lote
-					$key_lote = $prod_id . '_' . $prod_fv;
-					$cstock_lote = isset($stock_lote_map[$key_lote]) ? $stock_lote_map[$key_lote] : 0;
-					$nstock = $cstock_lote - $prod_cant;
-					$stock_lote_map[$key_lote] = $nstock; // Actualizar mapa
-
 					// Insertar registro de stock
 					$motivo = 'v-'.$venta_id;
 					$stock = Sdba::table('stock');
-					$datas = array('id_stock'=>'','producto'=>$prod_id,'egreso'=>$cantidad[$i],'motivo'=>$motivo,'stock'=>$nstock,'fv'=>$prod_fv,'stockt'=>$stocktot,'fecha'=>$fecha, 'estado'=>'0');
+					$datas = array('id_stock'=>'','producto'=>$prod_id,'egreso'=>$cantidad[$i],'motivo'=>$motivo,'stock'=>$stocktot,'stockt'=>$stocktot,'fecha'=>$fecha, 'estado'=>'0');
 					$stock->insert($datas);
-
-					// Actualizar variante
-					$idvr = isset($variantes_map[$key_lote]) ? $variantes_map[$key_lote] : null;
-					if ($idvr) {
-						$variacion = Sdba::table('variantes');
-						$datava = array('id_variante'=>$idvr,'producto'=>$prod_id,'variante'=>$prod_fv, 'stock'=>$nstock);
-						$variacion->set($datava);
-					}
 
 					// Actualizar stockp en productos
 					$productos = Sdba::table('productos');
