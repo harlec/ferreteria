@@ -29,20 +29,16 @@ $db = Sdba::db();
 // Total sin filtro
 $totalRecords = Sdba::table('productos')->total();
 
-// Escapar busqueda
-$searchEsc = $db->escape('%'.$search.'%', true);
-
-// WHERE para busqueda
+// WHERE para busqueda multi-palabra (AND LIKE por cada palabra)
 $whereSearch = '';
 if ($search != '') {
-    $whereSearch = " WHERE (
-        p.nom_prod LIKE '{$searchEsc}' OR
-        p.codigo_producto LIKE '{$searchEsc}' OR
-        m.marca LIKE '{$searchEsc}' OR
-        c.nom_cat LIKE '{$searchEsc}' OR
-        co.color LIKE '{$searchEsc}' OR
-        u.nombre LIKE '{$searchEsc}'
-    )";
+    $palabras = array_filter(explode(' ', trim($search)));
+    $condiciones = [];
+    foreach ($palabras as $p) {
+        $esc = $db->escape('%'.$p.'%', true);
+        $condiciones[] = "(p.nom_prod LIKE '{$esc}' OR p.codigo_producto LIKE '{$esc}' OR m.marca LIKE '{$esc}' OR c.nom_cat LIKE '{$esc}' OR co.color LIKE '{$esc}' OR u.nombre LIKE '{$esc}')";
+    }
+    $whereSearch = ' WHERE ' . implode(' AND ', $condiciones);
 }
 
 // ORDER BY
