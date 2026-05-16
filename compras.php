@@ -12,6 +12,7 @@ include('inc/sdba/sdba.php'); // include main file
 	// 	$ocultar = 'ocultar';
 	// 	$comprobante = '<a title="Ver comprobante" target="_BLANK" href="'.$ventas_list1['url'].'">'.$ventas_list1['tipo'].''.$ventas_list1['numero'].'</a>';
 	// }
+	$datos = '';
 	foreach ($ventas_list1 as $value) {
 
 		if ($value['exonerada']=='no') {

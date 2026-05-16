@@ -48,6 +48,7 @@ $stock->where('producto',$id)->and_where('tienda =','1');
 $stock->order_by('id_stock','desc');
 $stock1 = $stock->get_one();
 
+$stocks = '';
 $stocks .='<tr><td>Tienda 1</td><td>'.$stock1['stock'].'</td></tr>';
 
 $stock->reset();

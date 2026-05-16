@@ -18,6 +18,7 @@ $fechafin = $_POST['fechafin'];
 	$ventas1->order_by('id_compra','desc');
 	$ventas_list1 = $ventas1->get();
 
+	$datos = '';
 	foreach ($ventas_list1 as $value) {
 
 		if ($value['exonerada']=='no') {

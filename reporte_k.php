@@ -24,7 +24,11 @@ $producto = $_POST['producto'];
 	//$ventas1->left_join('proveedor','proveedores','id_proveedor');
 	$ventas1->order_by('id_stock','asc');
 	$ventas_list1 = $ventas1->get();
-	$entro = '';
+	$entro  = '';
+	$datos  = '';
+	$stockt = 0;
+	$ingreso = 0;
+	$egreso  = 0;
 	foreach ($ventas_list1 as $value) {
 		if ($value['motivo']=='si') {
 			$entro = 'si';

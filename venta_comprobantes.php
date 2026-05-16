@@ -12,6 +12,7 @@ $tienda = $_SESSION['tienda'];
 
 	$ventas_list1 = $ventas1->get();
 	
+	$datos = '';
 	$i=0;
 	foreach ($ventas_list1 as $value) {
 

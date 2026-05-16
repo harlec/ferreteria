@@ -18,6 +18,7 @@ foreach ($ventas_list as $value) {
 	$stock->where('producto',$value['id_producto']);
 	$stock->order_by('id_stock','desc');
 	$stock1 = $stock->get_one();
+	$stocks = '';
 	$stocks .='<tr><td>Tienda 1</td><td>'.$stock1['stock'].'</td></tr>';
 	$stockt = $stockt + $stock1['stock'];
 
