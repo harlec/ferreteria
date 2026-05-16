@@ -1,5 +1,6 @@
 <?php
-
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 include('inc/control.php');
 // if ($_SESSION['type']=='operador') {
 // 	header("Location: dashboard.php");
