@@ -56,16 +56,16 @@ if (isset($_POST) && !empty($_POST)) {
 				$stock->where('producto',$id_p[$i]);
 				$stock->order_by('id_stock','desc');
 				$stockl = $stock->get_one();
-				$cstock = $stockl['stockt'];
-				$stocktot = $cstock - $cantidad[$i];
+				$cstock = floatval($stockl['stockt']);
+				$stocktot = $cstock - floatval($cantidad[$i]);
 
 				//actualizamos el stock por lote
 				$stock->reset();
 				$stock->where('producto',$id_p[$i])->and_where('fv =',$fv[$i]);
 				$stock->order_by('id_stock','desc');
 				$stockl = $stock->get_one();
-				$cstock = $stockl['stock'];
-				$nstock = $cstock - $cantidad[$i];
+				$cstock = floatval($stockl['stock']);
+				$nstock = $cstock - floatval($cantidad[$i]);
 
 				$motivo = 'v-'.$venta_id;
 				$datas = array('id_stock'=>'','producto'=>$id_p[$i],'egreso'=>$cantidad[$i],'motivo'=>$motivo,'stock'=>$nstock,'fv'=>$fv[$i],'stockt'=>$stocktot,'fecha'=>$fecha, 'estado'=>'0');

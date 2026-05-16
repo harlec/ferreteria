@@ -46,9 +46,9 @@ $producto = $_POST['producto'];
 		$cant_product = 0;
 
 		foreach ($deta_list_list as $detalle) {
-			$cant_product = $cant_product + $detalle['cantidad'];
+			$cant_product = $cant_product + floatval($detalle['cantidad']);
 			$prodct_t[$name_product] = $cant_product;
-			$totalc += $detalle['cantidad']*$product['precio']*.65;
+			$totalc += floatval($detalle['cantidad']) * floatval($product['precio']) * .65;
 		}
 	}
 

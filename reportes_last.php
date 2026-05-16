@@ -20,7 +20,7 @@ foreach ($ventas_list as $value) {
 	$stock1 = $stock->get_one();
 	$stocks = '';
 	$stocks .='<tr><td>Tienda 1</td><td>'.$stock1['stock'].'</td></tr>';
-	$stockt = $stockt + $stock1['stock'];
+	$stockt = $stockt + floatval($stock1['stock']);
 
 	//rellenamos 
 	if ($stock1['stock']=='') {

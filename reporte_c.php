@@ -22,8 +22,8 @@ $fechafin = $_POST['fechafin'];
 	foreach ($ventas_list1 as $value) {
 
 		if ($value['exonerada']=='no') {
-			$subtotal = ($value['total'])/(1.18);
-			$igv = $value['total']-$subtotal;
+			$subtotal = floatval($value['total']) / 1.18;
+			$igv = floatval($value['total']) - $subtotal;
 		}
 		else{
 			$subtotal = $value['total'];

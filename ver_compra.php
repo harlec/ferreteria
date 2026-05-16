@@ -30,7 +30,7 @@ $i = 1;
 $tot = 0;
 foreach ($ventas_list as $value) {
 
-	$tot = $tot + $value['total'];
+	$tot = $tot + floatval($value['total']);
 
 	$datos .='<tr> 
     			<th scope="row">'.$i.'</th> 

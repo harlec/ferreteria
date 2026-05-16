@@ -41,7 +41,7 @@ $datos = '';
 $i = 1;
 $tot = 0;
 foreach ($ventas_list as $value) {
-	$tot = $tot + $value['total'];
+	$tot = $tot + floatval($value['total']);
 	$id_det = $value['id_detalle'];
 	$cant = floatval($value['cantidad']);
 	$despachado = isset($despachos_map[$id_det]) ? $despachos_map[$id_det] : 0;

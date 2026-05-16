@@ -27,8 +27,8 @@ $mensajeError = 'hasta aca bien';
 		$stock->where('producto',$producto);
 		$stock->order_by('id_stock','desc');
 		$stockl = $stock->get_one();
-		$cstock = $stockl['stockt'];
-		$nstockt = $cstock - $value['ingreso']; //stock total x producto
+		$cstock = floatval($stockl['stockt']);
+		$nstockt = $cstock - floatval($value['ingreso']); //stock total x producto
 		$motivo = 'EC-'.$id;
 
 		//obtenemos el stock del producto x lote
@@ -36,8 +36,8 @@ $mensajeError = 'hasta aca bien';
 		$stock->where('producto',$producto)->and_where('fv =',$fv);
 		$stock->order_by('id_stock','desc');
 		$stockl = $stock->get_one();
-		$cstock = $stockl['stock'];
-		$nstock = $cstock - $value['ingreso'];
+		$cstock = floatval($stockl['stock']);
+		$nstock = $cstock - floatval($value['ingreso']);
 
 
 		$datas = array('id_stock'=>'','producto'=>$producto,'egreso'=>$value['ingreso'],'motivo'=>$motivo,'stock'=>$nstock,'fv'=>$fv,'stockt'=>$nstockt,'fecha'=>$fecha, 'estado'=>'0');

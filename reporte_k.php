@@ -1,6 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
 include('inc/control.php');
 // if ($_SESSION['type']=='operador') {
 // 	header("Location: dashboard.php");
@@ -44,9 +42,9 @@ $producto = $_POST['producto'];
     			<td>'.$value['stockt'].'</td>
     		  </tr>';
 
-    	$stockt = $value['stockt'];
-    	$ingreso = $value['ingreso'];
-    	$egreso = $value['egreso'];
+    	$stockt  = floatval($value['stockt']);
+    	$ingreso = floatval($value['ingreso']);
+    	$egreso  = floatval($value['egreso']);
 	}
 
 	$stockt = $stockt - $ingreso + $egreso;
