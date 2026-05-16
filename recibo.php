@@ -89,7 +89,7 @@ $facturan = 0;
 	}
 </style>	<h5 style="text-align:center;"><b>NOTA DE VENTA</b>
 			</h5>
-			<h5 style="text-align:center;">Ferreteros y Constructores<br> "EL TORITO DE ORO"</h5>
+			<h5 style="text-align:center;">Ferreteros y Constructores<br> "TORITO DE ORO"</h5>
 			<h6 style="text-align:center;"><b>ENVIROMENTAL SENSE CONSULTING S.R.L. - ENSCO S.R.L.</b><br>
 				Mz-A sublote-01 Urb San José - Espaldas del Grifo Repsol - Barranca<br>
 				986362380 - 992770595 - 986165174 <br>
