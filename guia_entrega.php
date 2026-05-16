@@ -1,6 +1,5 @@
 <?php
 ob_start();
-require_once 'inc/dompdf/autoload.inc.php';
 require 'inc/vendor/autoload.php';
 
 include('inc/control.php');
@@ -121,10 +120,10 @@ tbody td { font-size: 10px; }
 
 <?php
 use Dompdf\Dompdf;
-$dompdf = new DOMPDF();
-$dompdf->load_html(ob_get_clean());
+$dompdf = new Dompdf();
+$dompdf->loadHtml(ob_get_clean());
 // Formato ticket 80mm de ancho, altura suficiente para muchos items
-$dompdf->set_paper(array(0, 0, 226, 2000));
+$dompdf->setPaper(array(0, 0, 226, 2000));
 $dompdf->render();
 $dompdf->stream('guia_entrega.pdf');
 ?>

@@ -1,6 +1,5 @@
 <?php
 ob_start();
-require_once 'inc/dompdf/autoload.inc.php';
 require 'inc/vendor/autoload.php';
 use Luecano\NumeroALetras\NumeroALetras;
 
@@ -123,9 +122,9 @@ $facturan = 0;
 
 <?php
 use Dompdf\Dompdf;
-$dompdf = new DOMPDF();
-$dompdf->load_html(ob_get_clean());
-$dompdf->set_paper(array(0,0,200,1000));
+$dompdf = new Dompdf();
+$dompdf->loadHtml(ob_get_clean());
+$dompdf->setPaper(array(0,0,200,1000));
 $dompdf->render();
 $pdf = $dompdf->output();
 $filename = "recibo.pdf";

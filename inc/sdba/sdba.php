@@ -5,7 +5,7 @@ class Sdba
     private $instanse_name;
     private $selfpath;
     private $db;
-    private $magic_quotes_gpc;
+
     private $result;
     private $dbhost;
     private $dbuser;
@@ -34,7 +34,7 @@ class Sdba
 
     public static function table($table = '', $params = false)
     {
-        include_once (dirname(__file__) . '/sdba_config.php');
+        include_once (dirname(__FILE__) . '/sdba_config.php');
         if (is_array($params))
         {
             $dbuser = $params['dbuser'];
@@ -61,8 +61,7 @@ class Sdba
     }
     private function __construct($table, $dbuser, $dbpass, $dbname, $dbhost, $dbencoding)
     {
-        //$this->magic_quotes_gpc = get_magic_quotes_gpc();
-        $this->selfpath = dirname(__file__);
+        $this->selfpath = dirname(__FILE__);
         if (strpos($dbhost, ':') !== false)
         {
             list($host, $port) = explode(':', $dbhost, 2);
@@ -650,8 +649,8 @@ class Sdba
         if (is_int($val))
             return (int)$val;
         if ($not_qu)
-            return $this->magic_quotes_gpc ? $val : $this->db->real_escape_string($val);
-        return '\'' . ($this->magic_quotes_gpc ? $val : $this->db->real_escape_string($val)) . '\'';
+            return $this->db->real_escape_string($val);
+        return '\'' . $this->db->real_escape_string($val) . '\'';
     }
     public function sum($field = '', $alias = false, $table = false)
     {
@@ -847,9 +846,7 @@ class Sdba
     {
         if (is_int($val))
             return (int)$val;
-        if (!$this->magic_quotes_gpc)
-            return $this->db->real_escape_string($val);
-        return $val;
+        return $this->db->real_escape_string($val);
     }
     private function _build_select()
     {
