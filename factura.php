@@ -241,14 +241,27 @@ $facturan = 0;
 		
 
 	  
-	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+	<!-- Overlay bloqueo mientras factura -->
+<div id="overlay-facturando" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);z-index:9999;align-items:center;justify-content:center;flex-direction:column;">
+	<div style="text-align:center;color:#fff;">
+		<div style="border:6px solid rgba(255,255,255,0.3);border-top:6px solid #5cb85c;border-radius:50%;width:70px;height:70px;animation:spin 0.9s linear infinite;margin:0 auto 24px;"></div>
+		<h3 style="margin:0 0 10px;">Generando factura...</h3>
+		<p style="font-size:15px;opacity:0.85;">Por favor no cierre ni actualice esta página</p>
+	</div>
+</div>
+<style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	<script src="/assets/js/jquery-ui.min.js"></script> 
 	<script >
 	// A $( document ).ready() block.
-	$(document ).ready(function() {	
-	    console.log( "ready!" );
+	$(document ).ready(function() {
+		var procesando = false;
+		window.onbeforeunload = function() {
+			if (procesando) return 'La factura está siendo generada. ¿Está seguro que desea salir?';
+		};
 
 	    console.log(<?php echo $facturan; ?>);
 		$( "#nombre" ).autocomplete({
@@ -334,66 +347,40 @@ $facturan = 0;
 			});
 
 			$("body").on('click', '#facturar', function () {
-		    	var str2 = $('#frmfactura').serialize();
-		    	console.log(str2);
-		    	//alert(str2);
-		    	$.ajax({
-		    		beforeSend: function(){
-					     $("#loading").show();
-					      $("#facturar").css("visibility", "hidden");
-					     
-					},
-					   complete: function(){
-					     $("#loading").hide();
-					},
-					cache: false,
-					type: "POST",
-					dataType: "json",
-					url: "inc/factura_e.php",
-					data: str2,
-					success: function(response){
-
-						//alert('bien');
-						console.log(response);
-
-						var sunat = JSON.parse(response); 
-				  		console.log(sunat.enlace);
-						// console.log(response);
-						//document.location.href = "venta.php";
-						window.open(sunat.enlace_del_pdf,'_blank');
-						return false;
-
-						//if(response.respuesta == false){
-							//swal('Advertencia',response,'warning');
-							//console.log(response);
-
-						//}else{
-
-							//swal('Perfecto', response,'success')
-							// console.log(response.mesa);
-							// $('#mostrarmesa').load('inc/mobile/ver_mesa.php?mesa='+ response.mesa);
-							// //document.location.href = "listar_ventas.php";
-						
-						//}
-					
-					},
-					error: function(reponse1){
-						alert(reponse1);
+		    var $btn = $(this);
+		    if ($btn.prop('disabled')) return;
+		    var str2 = $('#frmfactura').serialize();
+		    procesando = true;
+		    $.ajax({
+		    	beforeSend: function(){
+				    $btn.prop('disabled', true).text('Facturando...');
+				    $('#overlay-facturando').css('display','flex');
+				},
+				complete: function(){
+				    procesando = false;
+				    $('#overlay-facturando').hide();
+				},
+				cache: false,
+				type: "POST",
+				dataType: "json",
+				url: "inc/factura_e.php",
+				data: str2,
+				success: function(response){
+					var sunat = JSON.parse(response);
+					if (sunat.ya_existia) {
+						$btn.text('✓ Factura ya existía');
+						alert('Esta venta ya tiene una factura generada. Se abrirá el documento existente.');
+					} else {
+						$btn.text('✓ Factura Generada');
 					}
-				});
-				
-				//$(this ).hide();
-				//return false;
-		    	// var tot = $('#total').val();
-		    	// var queda = tot-to;
-		    	// console.log(tot);
-		    	// console.log(queda);
-			    // $(this).closest('tr').remove();
-			    // $(this).parents('.pt-r').remove();
-			    // $('#total').val(queda);
-			    // console.log(to);
-
+					window.open(sunat.enlace_del_pdf,'_blank');
+				},
+				error: function(){
+					$btn.prop('disabled', false).text('Facturar');
+					alert('Error al generar factura. Intente nuevamente.');
+				}
 			});
+		});
 
 			
 				var forma = <?php echo $tipo; ?>;

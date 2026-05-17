@@ -15,6 +15,16 @@ $venta_id = $_POST['venta_id'];
 // Soporte para múltiples IDs (ej: "5,6,7")
 $venta_ids = array_filter(array_map('intval', explode(',', $venta_id)));
 $venta_id_principal = $venta_ids[0]; // para el comprobante
+
+// Verificar si ya existe un comprobante para esta venta
+$comp_check = Sdba::table('comprobantes');
+$comp_check->where('venta', $venta_id_principal)->and_where('tipo', 'B');
+$comp_existente = $comp_check->get_one();
+if ($comp_existente && $comp_existente['url']) {
+    $fake = json_encode(['enlace_del_pdf' => $comp_existente['url'], 'numero' => $comp_existente['numero'], 'ya_existia' => true]);
+    echo json_encode($fake);
+    exit;
+}
 $user = $_POST['user'];
 $ruc =$_POST['ruc'];
 $r_social = $_POST['r_social'];
