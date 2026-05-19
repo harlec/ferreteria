@@ -48,6 +48,7 @@ $facturan = 0;
 
 	$i=1;
 	$tot = 0;
+	$mostrar_de_venta = '';
 	foreach ($ventas_list as $key ) {
 
 
@@ -58,7 +59,7 @@ $facturan = 0;
 
 		$unidad_p = $unidad_same['codigo'];
 
-		$tot = $tot + $key['total'];
+		$tot = $tot + floatval($key['total']);
 		$mostrar_de_venta .= '<tr>
 								<td>['.$key["cantidad"].']'.$key['nom_prod'].'</td>
 								<td style="text-align: right;" >'.number_format($key['precio'],2,'.',',').'</td>
@@ -75,6 +76,11 @@ $facturan = 0;
 <style>
 	body{
 		font-family: Helvetica, Sans-Serif;
+		width: 100%;
+	}
+	table{
+		width: 100%;
+		border-collapse: collapse;
 	}
 	thead th{
 		font-size: 10px;
