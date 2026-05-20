@@ -250,17 +250,12 @@ $facturan = 0;
 		$( "#ruc" ).on('change paste keyup', function() {
 			if(this.value.length==11){
 				var output = document.getElementById("output");
-                  var data = new FormData();
                   var ruc = $(this).val();
-                  data.append("ruc", ruc);
-                  data.append("token", "c837b2e5-681b-43ca-ab39-9a115548a8c2-655574bd-c5b8-4270-a324-0f66b09195f1");
-
                   var xhr = new XMLHttpRequest();
-                  
-                  xhr.open("POST", "https://api.migo.pe/api/v1/ruc");
+                  xhr.open("GET", "https://apisunat.harlec.com.pe/api/v1/ruc/" + ruc);
+                  xhr.setRequestHeader("Authorization", "Bearer 0f9d806a79e9380c946795a33ed530f95fd5cf1142625dd94d557711f7a59bdd");
                   xhr.setRequestHeader("Accept", "application/json");
-                  
-                  xhr.send(data);
+                  xhr.send();
                   console.log(xhr);
                   console.log('hola');
                   console.log(xhr.response);
@@ -273,7 +268,7 @@ $facturan = 0;
 				        	console.log(hugo.ruc);
 				            console.log(xhr.response);
 				            //$('#ruc').val(hugo.ruc);
-				            $('#r_social').val(hugo.nombre_o_razon_social);
+				            $('#r_social').val(hugo.razon_social);
 				            $('#direccion').val(hugo.direccion);
 				            console.log(xhr.responseText);
 				        }
