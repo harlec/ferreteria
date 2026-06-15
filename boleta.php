@@ -257,12 +257,16 @@ $facturan = 0;
 
 		$( "#ruc" ).change(function() {
 			var output = document.getElementById("output");
+                  var data = new FormData();
                   var ruc = $(this).val();
+                  data.append("dni", ruc);
+                  data.append("token", "zTpY82Dl6QpAzgS3UW3z2f5YxeMw56JMtkYLbiOPgPtqXsMk7XHePLUDZTdz");
                   var xhr = new XMLHttpRequest();
-                  xhr.open("GET", "https://apisunat.harlec.com.pe/api/v1/dni/" + ruc);
-                  xhr.setRequestHeader("Authorization", "Bearer 0f9d806a79e9380c946795a33ed530f95fd5cf1142625dd94d557711f7a59bdd");
+
+                  xhr.open("POST", "https://api.migo.pe/api/v1/dni");
                   xhr.setRequestHeader("Accept", "application/json");
-                  xhr.send();
+
+                  xhr.send(data);
                   console.log(xhr);
                   console.log('hola');
                   console.log(xhr.response);
@@ -276,7 +280,7 @@ $facturan = 0;
 				        	//console.log(hugo.ruc);
 				            console.log(xhr.response);
 				            //var nombres = hugo.nombres + ' ' + hugo.apellido_paterno + ' ' + hugo.apellido_materno; 
-				            var nombres = hugo.nombre_completo;
+				            var nombres = hugo.nombre;
 				            //$('#ruc').val(hugo.ruc);
 				            $('#r_social').val(nombres);
 				            //$('#direccion').val(hugo.direccion);
