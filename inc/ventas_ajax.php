@@ -7,7 +7,7 @@ $start       = isset($_GET['start'])                  ? (int)$_GET['start']   : 
 $length      = isset($_GET['length'])                 ? (int)$_GET['length']  : 10;
 $search      = isset($_GET['search']['value'])        ? $_GET['search']['value'] : '';
 $orderColumn = isset($_GET['order'][0]['column'])     ? (int)$_GET['order'][0]['column'] : 4;
-$orderDir    = isset($_GET['order'][0]['dir']) && $_GET['order'][0]['dir'] === 'asc' ? 'ASC' : 'DESC';
+$orderDir    = isset($_GET['order'][0]['dir']) && $_GET['order'][0]['dir'] === 'desc' ? 'DESC' : 'ASC';
 
 $id_usr    = (int)$_SESSION['id_usr'];
 $tipo_usr  = $_SESSION['type'];
@@ -87,7 +87,7 @@ $filteredRecords = (int)$filteredResult['total'];
 
 // Datos paginados
 $sql = "SELECT * FROM ({$union_sql}) AS t {$comp_filter_venta} {$search_where}
-        ORDER BY {$orderBy} {$orderDir}
+        ORDER BY {$orderBy} {$orderDir}, id_venta {$orderDir}
         LIMIT {$start}, {$length}";
 
 $data = $db->query($sql)->result();
