@@ -37,6 +37,12 @@ if ($ventas_list1['estado']=='1') {
 } 
 
 
+// Pagos de esta venta
+$formas_nombre = array('1'=>'Efectivo','2'=>'Tar. Débito','3'=>'Tar. Crédito','4'=>'Crédito','5'=>'Yape','6'=>'Transferencia');
+$pagos_q = Sdba::table('pagos');
+$pagos_q->where('venta', $id);
+$pagos_list = $pagos_q->get();
+
 $datos = '';
 $i = 1;
 $tot = 0;
@@ -149,6 +155,23 @@ foreach ($ventas_list as $value) {
 											    	</tbody> 
 											    </table>
 											    <p class="text-right"><strong>Total: S/ <?php echo $tot; ?></strong></p>
+
+											    <?php if (!empty($pagos_list)): ?>
+											    <div style="margin-bottom:10px;">
+											    	<strong>Forma<?php echo count($pagos_list) > 1 ? 's' : ''; ?> de pago:</strong>
+											    	<table class="table table-condensed" style="margin-top:5px;margin-bottom:0;">
+											    		<tbody>
+											    		<?php foreach ($pagos_list as $pg): ?>
+											    			<tr>
+											    				<td><?php echo isset($formas_nombre[$pg['forma']]) ? $formas_nombre[$pg['forma']] : 'Otro'; ?></td>
+											    				<td class="text-right"><strong>S/ <?php echo number_format(floatval($pg['monto']), 2); ?></strong></td>
+											    			</tr>
+											    		<?php endforeach; ?>
+											    		</tbody>
+											    	</table>
+											    </div>
+											    <?php endif; ?>
+
 											    <center>
 											    	<a class="btn btn-success btn-lg <?php echo $ocultar;?>" href="factura.php?id=<?php echo $id; ?>">Factura</a>
 												    <a class="btn btn-primary btn-lg <?php echo $ocultar;?>" href="boleta.php?id=<?php echo $id; ?>">Boleta</a>
