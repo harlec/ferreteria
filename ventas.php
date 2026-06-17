@@ -1,8 +1,14 @@
 <?php
 include('inc/control.php');
+include('inc/sdba/sdba.php');
 
 $filtro_comp = isset($_GET['tipo_comp']) ? $_GET['tipo_comp'] : '';
 $ajax_url = '/inc/ventas_ajax.php' . ($filtro_comp ? '?tipo_comp='.htmlspecialchars($filtro_comp) : '');
+
+$page_length = 10;
+$count_v = Sdba::table('ventas')->where('estado !=', '2')->total();
+$count_p = Sdba::table('proforma')->where('estado !=', '2')->total();
+$display_start = max(0, (ceil(($count_v + $count_p) / $page_length) - 1) * $page_length);
 ?>
 
 <!DOCTYPE html>
@@ -134,6 +140,7 @@ $ajax_url = '/inc/ventas_ajax.php' . ($filtro_comp ? '?tipo_comp='.htmlspecialch
 		$('#datos').DataTable({
 			processing: true,
 			serverSide: true,
+			displayStart: <?php echo $display_start; ?>,
 			ajax: {
 				url: '<?php echo $ajax_url; ?>',
 				type: 'GET'
@@ -149,14 +156,7 @@ $ajax_url = '/inc/ventas_ajax.php' . ($filtro_comp ? '?tipo_comp='.htmlspecialch
 				{ title: "Comprobante",  orderable: false, searchable: false },
 				{ title: "Cliente" },
 				{ title: "Opciones",     orderable: false, searchable: false }
-			],
-			initComplete: function() {
-				var api = this.api();
-				var info = api.page.info();
-				if (info.pages > 1) {
-					api.page(info.pages - 1).draw('page');
-				}
-			}
+			]
 		});
 
 		$('body').on('click', '.btn-borrar', function() {
