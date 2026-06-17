@@ -138,7 +138,7 @@ $ajax_url = '/inc/ventas_ajax.php' . ($filtro_comp ? '?tipo_comp='.htmlspecialch
 				url: '<?php echo $ajax_url; ?>',
 				type: 'GET'
 			},
-			order: [[4, 'desc']],
+			order: [[4, 'asc']],
 			columns: [
 				{ title: "#",           orderable: false, searchable: false },
 				{ title: "Venta" },
@@ -149,7 +149,14 @@ $ajax_url = '/inc/ventas_ajax.php' . ($filtro_comp ? '?tipo_comp='.htmlspecialch
 				{ title: "Comprobante",  orderable: false, searchable: false },
 				{ title: "Cliente" },
 				{ title: "Opciones",     orderable: false, searchable: false }
-			]
+			],
+			initComplete: function() {
+				var api = this.api();
+				var info = api.page.info();
+				if (info.pages > 1) {
+					api.page(info.pages - 1).draw('page');
+				}
+			}
 		});
 
 		$('body').on('click', '.btn-borrar', function() {
