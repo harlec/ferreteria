@@ -14,6 +14,7 @@ $v_dia->where('fecha', $hoy)->and_where('estado !=', '2');
 $ventas_dia_list = $v_dia->get();
 $ventas_dia_count = count($ventas_dia_list);
 $ventas_dia_total = 0;
+$venta_ids_dia = array();
 $dia_por_forma = array();
 $dia_forma_count = array();
 $dia_por_tipo = array();
@@ -21,14 +22,22 @@ $dia_tipo_count = array();
 foreach ($ventas_dia_list as $v) {
 	$t = floatval($v['total']);
 	$ventas_dia_total += $t;
-	$f = $v['forma'];
-	if (!isset($dia_por_forma[$f])) { $dia_por_forma[$f] = 0; $dia_forma_count[$f] = 0; }
-	$dia_por_forma[$f] += $t;
-	$dia_forma_count[$f]++;
+	$venta_ids_dia[] = $v['id_venta'];
 	$tp = $v['tipo'];
 	if (!isset($dia_por_tipo[$tp])) { $dia_por_tipo[$tp] = 0; $dia_tipo_count[$tp] = 0; }
 	$dia_por_tipo[$tp] += $t;
 	$dia_tipo_count[$tp]++;
+}
+if (!empty($venta_ids_dia)) {
+	$pagos_dia_q = Sdba::table('pagos');
+	$pagos_dia_q->where_in('venta', $venta_ids_dia);
+	foreach ($pagos_dia_q->get() as $p) {
+		$f = $p['forma'];
+		$m = floatval($p['monto']);
+		if (!isset($dia_por_forma[$f])) { $dia_por_forma[$f] = 0; $dia_forma_count[$f] = 0; }
+		$dia_por_forma[$f] += $m;
+		$dia_forma_count[$f]++;
+	}
 }
 
 // Ventas del mes
@@ -44,10 +53,6 @@ $mes_tipo_count = array();
 foreach ($ventas_mes_all as $v) {
 	$t = floatval($v['total']);
 	$ventas_mes_total += $t;
-	$f = $v['forma'];
-	if (!isset($mes_por_forma[$f])) { $mes_por_forma[$f] = 0; $mes_forma_count[$f] = 0; }
-	$mes_por_forma[$f] += $t;
-	$mes_forma_count[$f]++;
 	$tp = $v['tipo'];
 	if (!isset($mes_por_tipo[$tp])) { $mes_por_tipo[$tp] = 0; $mes_tipo_count[$tp] = 0; }
 	$mes_por_tipo[$tp] += $t;
@@ -80,6 +85,19 @@ for ($d = 6; $d >= 0; $d--) {
 $venta_ids_mes = array();
 foreach ($ventas_mes_all as $v) {
 	$venta_ids_mes[] = $v['id_venta'];
+}
+
+// Formas de pago del mes desde tabla pagos
+if (!empty($venta_ids_mes)) {
+	$pagos_mes_q = Sdba::table('pagos');
+	$pagos_mes_q->where_in('venta', $venta_ids_mes);
+	foreach ($pagos_mes_q->get() as $p) {
+		$f = $p['forma'];
+		$m = floatval($p['monto']);
+		if (!isset($mes_por_forma[$f])) { $mes_por_forma[$f] = 0; $mes_forma_count[$f] = 0; }
+		$mes_por_forma[$f] += $m;
+		$mes_forma_count[$f]++;
+	}
 }
 
 // Comprobantes del mes en una sola query
