@@ -13,10 +13,23 @@ $fechafin = $_POST['fechafin'];
 
 
 //ventas
-$ventas1 = Sdba::table('ventas');
-$ventas1->where('fecha <=', $fechafin)->and_where('fecha >=',$fechaini);
-//$ventas->left_join('unidad_prod','unidades','id_unidad'); // creating table object
-$ventas_list1 = $ventas1->get(); 
+$ventas_q = Sdba::table('ventas');
+$ventas_q->where('fecha <=', $fechafin)->and_where('fecha >=', $fechaini)->and_where('estado !=', '2');
+$ventas_list1 = $ventas_q->get();
+
+$formas_pago = ['1'=>'Efectivo','2'=>'Tar. Débito','3'=>'Tar. Crédito','4'=>'Crédito','5'=>'Yape','6'=>'Transferencia'];
+$pagos_map = [];
+$ids_rv = array_column($ventas_list1, 'id_venta');
+if (!empty($ids_rv)) {
+	$pq = Sdba::table('pagos');
+	$pq->where_in('venta', $ids_rv);
+	foreach ($pq->get() as $p) {
+		$vid = $p['venta'];
+		if (!isset($pagos_map[$vid])) $pagos_map[$vid] = ['count' => 0, 'formas' => []];
+		$pagos_map[$vid]['count']++;
+		$pagos_map[$vid]['formas'][] = $formas_pago[$p['forma']] ?? 'Otro';
+	}
+}
 
 $datos = '';
 $i = 1;
@@ -26,31 +39,23 @@ foreach ($ventas_list1 as $value) {
 	$comprobante = '';
 	$id = $value['id_venta'];
 
-	$ventas1 = Sdba::table('comprobantes'); // creating table object
-	$ventas1->where('venta', $id);
-	$ventas1->order_by('id_comprobante','desc');
-	$ventas_list1 = $ventas1->get_one();
-	
+	$comp_q = Sdba::table('comprobantes');
+	$comp_q->where('venta', $id);
+	$comp_q->order_by('id_comprobante','desc');
+	$comp_row = $comp_q->get_one();
+
 	if ($value['estado']=='1') {
 		$ocultar = 'ocultar';
-		$comprobante = '<a title="Ver comprobante" target="_BLANK" href="'.$ventas_list1['url'].'">'.$ventas_list1['tipo'].''.$ventas_list1['numero'].'</a>';
+		$comprobante = '<a title="Ver comprobante" target="_BLANK" href="'.$comp_row['url'].'">'.$comp_row['tipo'].''.$comp_row['numero'].'</a>';
 	}
-	if ($value['tipo']=='1') {
-		$tipo = 'Contado';
-	}
-	else{
-		$tipo = 'Credito';
-	}
-	switch ($value['forma']) {
-		case '1':
-			$forma = 'Efectivo';
-			break;
-		case '2':
-			$forma = 'Tar. Debito';
-			break;
-		case '3':
-			$forma = 'Tar. Crédito';
-			break;
+	$tipo = $value['tipo'] == '1' ? 'Contado' : 'Crédito';
+
+	if (isset($pagos_map[$id])) {
+		$forma = $pagos_map[$id]['count'] > 1
+			? '<span class="label label-warning">Mixto</span> <small>(' . implode(' + ', $pagos_map[$id]['formas']) . ')</small>'
+			: $pagos_map[$id]['formas'][0];
+	} else {
+		$forma = $formas_pago[$value['forma']] ?? '';
 	}
 	if ($value['total']=='NaN') {
 		$total = 0;
