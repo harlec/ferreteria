@@ -25,9 +25,14 @@ if (isset($_POST) && !empty($_POST)) {
 	$id_p = $_POST['id_pro'];
 	$precio = $_POST['precio'];
 	$cantidad = $_POST['cantidad'];
-	//$monto = $_POST['monto'];
-	$total = $_POST['total'];
+	$total = floatval($_POST['total']);
 	$total_pre = $_POST['total_pre'];
+
+	if ($total <= 0) {
+		echo json_encode(['respuesta' => false, 'mensaje' => 'El total debe ser mayor a cero.', 'venta_id' => 0]);
+		exit;
+	}
+
 	$respuestaOk = true;
 	//guardamos en tabla ventas
 
