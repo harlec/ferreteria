@@ -27,6 +27,7 @@ if (isset($_POST) && !empty($_POST)) {
 	$cantidad = $_POST['cantidad'];
 	$total = floatval($_POST['total']);
 	$total_pre = $_POST['total_pre'];
+	$proforma_origen = isset($_POST['proforma_origen']) && intval($_POST['proforma_origen']) > 0 ? intval($_POST['proforma_origen']) : null;
 
 	if ($total <= 0) {
 		echo json_encode(['respuesta' => false, 'mensaje' => 'El total debe ser mayor a cero.', 'venta_id' => 0]);
@@ -53,9 +54,15 @@ if (isset($_POST) && !empty($_POST)) {
 			}
 
 			$ventas = Sdba::table('ventas');
-			$data = array('id_venta'=>'','fecha'=> $fecha,'fecha_ope'=>$fecha_ope,'total'=>$total,'cliente'=>$cliente,'usuario'=>$id_usuario,'tipo'=>$tipo,'forma'=>$forma,'fecha_pago'=>$fecha_pago,'estado'=>'0');
+			$data = array('id_venta'=>'','fecha'=> $fecha,'fecha_ope'=>$fecha_ope,'total'=>$total,'cliente'=>$cliente,'usuario'=>$id_usuario,'tipo'=>$tipo,'forma'=>$forma,'fecha_pago'=>$fecha_pago,'estado'=>'0','proforma_origen'=>$proforma_origen);
 			$ventas->insert($data);
 			$venta_id = $ventas->insert_id();
+			// Marcar proforma como convertida (estado=1)
+			if ($proforma_origen) {
+				$pf_upd = Sdba::table('proforma');
+				$pf_upd->where('id_venta', $proforma_origen);
+				$pf_upd->update(array('estado' => '1'));
+			}
 			// Guardar pagos múltiples
 			for ($pi = 0; $pi < count($pf); $pi++) {
 				$p_forma = intval($pf[$pi]);

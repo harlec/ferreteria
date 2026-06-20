@@ -91,6 +91,7 @@ $fecha_hoy = date('Y-m-d');
                             <div class="panel panel-default pa">
                                 <div class="panel-body">
                                     <form id="venta">
+                                        <input type="hidden" name="proforma_origen" value="<?php echo $id_proforma; ?>">
                                         <div class="row">
                                             <div class="col-md-3">
                                                 <div class="form-group">
