@@ -94,14 +94,15 @@ $facturan = 0;
 		margin-right: 0.4cm;
 		margin-top: 0.4cm;
 	}
-</style>	<h5 style="text-align:center;"><b>NOTA DE VENTA</b>
-			</h5>
-			<h4 style="text-align:center;">Ferreteros y Constructores<br> "TORITO DE ORO"</h4>
+</style>	
+			<h3 style="text-align:center;">Ferreteros y Constructores<br> "TORITO DE ORO"</h3>
 			<h6 style="text-align:center;"><b>ENVIROMENTAL SENSE CONSULTING S.R.L. - ENSCO S.R.L.</b><br>
 				Mz-A sublote-01 Urb San José - Espaldas del Grifo Repsol - Barranca<br>
 				986362380 - 992770595 - 986165174 <br>
 				RUC 20600064879
 			</h6>
+			<h5 style="text-align:center;"><b>NOTA DE VENTA N° <?= $id;?></b>
+			</h5>
 			<h6>FECHA: <?php echo $fechita; ?><br><?php echo $tipo; ?><br><?php echo $clsn; ?>	
 			</h6>
 			<hr>
