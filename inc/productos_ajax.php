@@ -30,7 +30,7 @@ $db = Sdba::db();
 $totalRecords = Sdba::table('productos')->where('estado !=', '0')->total();
 
 // WHERE para busqueda multi-palabra (AND LIKE por cada palabra)
-$whereSearch = " WHERE (p.estado IS NULL OR p.estado != 0)";
+$whereSearch = " WHERE (p.estado IS NULL OR p.estado != '0')";
 if ($search != '') {
     $palabras = array_filter(explode(' ', trim($search)));
     $condiciones = [];

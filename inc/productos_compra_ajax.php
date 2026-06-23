@@ -20,7 +20,7 @@ $total_records = Sdba::table('productos')->where('estado !=', '0')->total();
 $searchEsc = $db->escape('%'.$search.'%', true);
 
 // WHERE
-$whereSearch = " WHERE (p.estado IS NULL OR p.estado != 0)";
+$whereSearch = " WHERE (p.estado IS NULL OR p.estado != '0')";
 if ($search != '') {
 	$whereSearch .= " AND (p.nom_prod LIKE '{$searchEsc}' OR m.marca LIKE '{$searchEsc}')";
 }
