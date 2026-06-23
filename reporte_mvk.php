@@ -31,7 +31,7 @@ $producto = $_POST['producto'];
 	echo 'Min: '.$min;
 	
 	$productos = Sdba::table('productos');
-	$productos->where('estado', '1');
+	$productos->where('estado !=', '0');
 	$productos_list = $productos->get();
 	$product_t = array();
 	

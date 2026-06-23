@@ -13,14 +13,14 @@ $order_dir = isset($_POST['order'][0]['dir']) ? $_POST['order'][0]['dir'] : 'asc
 
 $db = Sdba::db();
 
-// Total sin filtro
-$total_records = Sdba::table('productos')->where('estado','1')->total();
+// Total sin filtro (excluye eliminados)
+$total_records = Sdba::table('productos')->where('estado !=', '0')->total();
 
 // Escapar búsqueda
 $searchEsc = $db->escape('%'.$search.'%', true);
 
 // WHERE
-$whereSearch = " WHERE p.estado = '1'";
+$whereSearch = " WHERE (p.estado IS NULL OR p.estado != 0)";
 if ($search != '') {
 	$whereSearch .= " AND (p.nom_prod LIKE '{$searchEsc}' OR m.marca LIKE '{$searchEsc}')";
 }
