@@ -174,8 +174,8 @@ foreach ($ventas_list as $value) {
 
 											    <center>
 											    	<a class="btn btn-success btn-lg <?php echo $ocultar;?>" href="factura.php?id=<?php echo $id; ?>">Factura</a>
-												    <a class="btn btn-primary btn-lg <?php echo $ocultar;?>" href="boleta.php?id=<?php echo $id; ?>">Boleta</a>
-												    <a class="btn btn-primary btn-lg <?php echo $ocultar;?>" href="recibo.php?id=<?php echo $id; ?>">Recibo</a>
+												    <a class="btn btn-primary btn-lg <?php echo $ocultar;?>" href="boleta.php?id=<?php echo $id; ?>" target="_blank">Boleta</a>
+												    <a class="btn btn-primary btn-lg <?php echo $ocultar;?>" href="recibo.php?id=<?php echo $id; ?>" target="_blank">Recibo</a>
 												    <button type="button" id="btn_despachar_todo" class="btn btn-warning btn-lg">Despachar TODO y Generar Guía</button>
 												    <?php if ($hay_despachos): ?>
 												    <a href="guia_entrega.php?venta=<?php echo $id; ?>&despachado=1" target="_blank" class="btn btn-default btn-lg"><i class="fas fa-file-alt"></i> Ver Guía de Entrega</a>
