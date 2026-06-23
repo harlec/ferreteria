@@ -17,6 +17,7 @@ if ($_SESSION['type']=='operador') {
     <link rel="stylesheet" type="text/css" href="/assets/css/custom.css">
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.6.4/css/buttons.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.5.0/sweetalert2.min.css">
     </head>
 
 <body class="mobile dashboard">
@@ -107,6 +108,7 @@ if ($_SESSION['type']=='operador') {
   <script src="https://cdn.datatables.net/buttons/1.6.1/js/buttons.flash.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
   <script src="https://cdn.datatables.net/buttons/1.6.1/js/buttons.html5.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.5.0/sweetalert2.min.js"></script>
 	<script >
 	// A $( document ).ready() block.
 	$(document ).ready(function() {
@@ -187,22 +189,39 @@ if ($_SESSION['type']=='operador') {
 		});
 	    console.log( "ready!" );
 
-	    $('body').on('click',".btn-borrar", function() {
+	    $('body').on('click', '.btn-borrar', function() {
 			var id = $(this).val();
-			var str1 = 'id=' + id;
-		  	$.ajax({	
-		    	type:'GET',
-				dataType: 'json',
-			  	url: '/inc/borrar_producto.php',
-			  	data: str1,
-			  	success: function(data1) {
-			   	 	console.log('borrado');
-			   	 	document.location.href = "ver_productos.php";
-			   	 	
-			  	}
+			Swal.fire({
+				title: '¿Eliminar producto?',
+				text: 'El producto no aparecerá en el sistema.',
+				type: 'warning',
+				showCancelButton: true,
+				confirmButtonColor: '#d33',
+				cancelButtonColor: '#6c757d',
+				confirmButtonText: 'Sí, eliminar',
+				cancelButtonText: 'Cancelar'
+			}).then(function(result) {
+				if (result.value) {
+					$.ajax({
+						type: 'GET',
+						dataType: 'json',
+						url: '/inc/borrar_producto.php',
+						data: { id: id },
+						success: function(data1) {
+							if (data1.respuesta) {
+								Swal.fire('Eliminado', 'El producto fue eliminado.', 'success').then(function() {
+									$('#datos').DataTable().ajax.reload();
+								});
+							} else {
+								Swal.fire('Error', 'No se pudo eliminar el producto.', 'error');
+							}
+						},
+						error: function() {
+							Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+						}
+					});
+				}
 			});
-			
-		  
 		});
 	});
 		

@@ -1,4 +1,5 @@
 <?php
+ob_start();
 session_start();
 include('sdba/sdba.php');
 
@@ -13,5 +14,7 @@ if ($id > 0) {
 	$respuestaOk = true;
 }
 
+ob_clean();
+header('Content-Type: application/json');
 echo json_encode(array('respuesta' => $respuestaOk, 'mensaje' => $mensajeError));
 ?>
