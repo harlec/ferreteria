@@ -21,11 +21,11 @@ $columnsOrder = [
 
 $db = Sdba::db();
 
-// Total sin filtro
-$totalRecords = Sdba::table('productos')->total();
+// Total sin filtro (solo productos activos)
+$totalRecords = Sdba::table('productos')->where('estado', '1')->total();
 
 // WHERE para busqueda: cada palabra debe aparecer en alguna columna
-$whereSearch = '';
+$whereSearch = ' WHERE p.estado = 1';
 if ($search != '') {
     $palabras = array_filter(explode(' ', trim($search)));
     $condiciones = [];
@@ -33,7 +33,7 @@ if ($search != '') {
         $esc = $db->escape('%'.$p.'%', true);
         $condiciones[] = "(p.nom_prod LIKE '{$esc}' OR p.codigo_producto LIKE '{$esc}' OR m.marca LIKE '{$esc}')";
     }
-    $whereSearch = ' WHERE ' . implode(' AND ', $condiciones);
+    $whereSearch .= ' AND ' . implode(' AND ', $condiciones);
 }
 
 // ORDER BY

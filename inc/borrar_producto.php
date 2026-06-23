@@ -1,36 +1,17 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 session_start();
+include('sdba/sdba.php');
 
-include('sdba/sdba.php'); // include main file
-
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $respuestaOk = false;
-$mensajeError = 'hasta aca bien';
-//$usuario = $_SESSION['id_usr'];
+$mensajeError = '';
 
-//if (isset($_POST) && !empty($_POST)) {
-	$id = $_GET['id'];
+if ($id > 0) {
+	$producto = Sdba::table('productos');
+	$producto->where('id_producto', $id);
+	$producto->update(array('estado' => '0'));
 	$respuestaOk = true;
-	//guardamos en tabla ventas
-			
-			$ventas = Sdba::table('productos');
-			$ventas->where('id_producto', $id);
-			$ventas->delete();
-			
-				$respuestaOk = true;
-				$mensajeError = 'entro';
+}
 
-
-		
-
-//}		
-
-		$salidaJson = array('respuesta' => $respuestaOk,
-							'mensaje' => $mensajeError);
-
-		echo json_encode($salidaJson);
-
-
+echo json_encode(array('respuesta' => $respuestaOk, 'mensaje' => $mensajeError));
 ?>

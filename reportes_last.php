@@ -6,7 +6,8 @@ if ($_SESSION['type']=='operador') {
 
 include('inc/sdba/sdba.php'); // include main file
 $ventas = Sdba::table('productos');
-$ventas->left_join('categoria','categorias','id_categoria'); // creating table object
+$ventas->where('estado', '1');
+$ventas->left_join('categoria','categorias','id_categoria');
 $ventas_list = $ventas->get(); 
 
 $datos = '';

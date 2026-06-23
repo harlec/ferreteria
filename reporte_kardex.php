@@ -5,7 +5,8 @@ if ($_SESSION['type']=='operador') {
 }
 include('inc/sdba/sdba.php'); 
 $productos = Sdba::table('productos');
-$productos->left_join('marca','marca','id_marca'); 
+$productos->where('estado', '1');
+$productos->left_join('marca','marca','id_marca');
 $productlist = $productos->get();
 $lp = '';
 foreach ($productlist as $value) {

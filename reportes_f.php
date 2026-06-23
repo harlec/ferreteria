@@ -8,6 +8,7 @@ include('inc/sdba/sdba.php'); // include main file
 $fecha = $_POST['fechaini'];
 
 $ventas = Sdba::table('productos');
+$ventas->where('estado', '1');
 $ventas->left_join('categoria','categorias','id_categoria');
 $ventas_list = $ventas->get();
 
