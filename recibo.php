@@ -15,7 +15,7 @@ $venta_l = $venta->get_one();
 $cliente = Sdba::table('clientes');
 $cliente->where('id_cliente', $venta_l['cliente']);
 $cls = $cliente->get_one();
-$clsn = $cls['cliente'] ?? 'VARIOS';
+$clsn = $cls['cliente'] ?? 'varios';
 
 $fechita = date("d-m-Y", strtotime($venta_l['fecha']));
 $tipo = $venta_l['tipo'] == '1' ? 'Contado' : 'Crédito';
@@ -30,9 +30,9 @@ $filas = '';
 foreach ($ventas_list as $key) {
     $tot += floatval($key['total']);
     $filas .= '<tr>
-        <td>[' . $key['cantidad'] . '] ' . htmlspecialchars($key['nom_prod']) . '</td>
-        <td class="der">' . number_format($key['precio'], 2, '.', ',') . '</td>
-        <td class="der">' . number_format($key['total'], 2, '.', ',') . '</td>
+        <td>' . htmlspecialchars('[' . $key['cantidad'] . ']' . $key['nom_prod']) . '</td>
+        <td class="num">' . number_format($key['precio'], 2, '.', ',') . '</td>
+        <td class="num">' . number_format($key['total'], 2, '.', ',') . '</td>
     </tr>';
 }
 
@@ -46,55 +46,80 @@ $letras = $formatter->toInvoice($tot, 2) . ' SOLES';
 <title>Recibo N° <?php echo $id; ?></title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Helvetica, Arial, sans-serif; font-size: 10px; width: 78mm; }
-    h4, h5, h6 { font-weight: bold; text-align: center; margin: 3px 0; }
-    h4 { font-size: 12px; }
-    h5 { font-size: 11px; }
-    h6 { font-size: 9px; font-weight: normal; }
-    hr { border: none; border-top: 1px dashed #000; margin: 4px 0; }
-    table { width: 100%; border-collapse: collapse; }
-    th { font-size: 9px; font-weight: bold; border-bottom: 1px solid #000; padding: 2px 0; }
-    td { font-size: 9px; padding: 1px 0; vertical-align: top; }
-    .der { text-align: right; }
-    .total-row td { font-size: 11px; font-weight: bold; border-top: 1px dashed #000; padding-top: 3px; }
-    .letras { font-size: 8px; padding-top: 3px; }
-    .gracias { text-align: center; margin-top: 6px; font-size: 9px; }
+
+    body {
+        font-family: Helvetica, Arial, sans-serif;
+        background: #e8e8e8;
+        display: flex;
+        justify-content: center;
+        padding: 30px 0;
+    }
+
+    .ticket {
+        background: #fff;
+        width: 76mm;
+        padding: 10px 8px 16px 8px;
+    }
+
+    .nom { font-size: 20px; font-weight: bold; text-align: center; line-height: 1.3; margin-bottom: 10px; }
+    .emp { font-size: 12px; font-weight: bold; text-align: center; line-height: 1.5; margin-bottom: 10px; }
+    .nventa { font-size: 18px; font-weight: bold; text-align: center; margin: 10px 0; }
+    .info { font-size: 13px; font-weight: bold; margin: 10px 0; line-height: 1.6; }
+
+    hr { border: none; border-top: 2px solid #000; margin: 8px 0; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+    thead th { font-size: 12px; font-weight: bold; padding: 3px 2px; text-align: left; }
+    thead th.num { text-align: right; }
+    tbody td { font-size: 12px; padding: 2px 2px; vertical-align: top; }
+    .num { text-align: right; white-space: nowrap; }
+
+    .total-row td { font-size: 14px; font-weight: bold; padding-top: 6px; }
+    .letras { font-size: 12px; padding-top: 8px; line-height: 1.5; }
+    .gracias { font-size: 13px; font-weight: bold; text-align: center; margin-top: 14px; }
+
     @media print {
+        body { background: none; padding: 0; display: block; }
+        .ticket { width: 100%; padding: 0; }
         @page { margin: 0.4cm; size: 80mm auto; }
-        body { width: 100%; }
     }
 </style>
 </head>
 <body>
-    <h4>Ferreteros y Constructores<br>"TORITO DE ORO"</h4>
-    <h6><b>ENVIROMENTAL SENSE CONSULTING S.R.L. - ENSCO S.R.L.</b><br>
-        Mz-A sublote-01 Urb San José - Espaldas del Grifo Repsol - Barranca<br>
+<div class="ticket">
+    <p class="nom">Ferreteros y Constructores<br>"TORITO DE ORO"</p>
+    <p class="emp">
+        ENVIROMENTAL SENSE CONSULTING<br>S.R.L. - ENSCO S.R.L.<br>
+        Mz-A sublote-01 Urb San José - Espaldas del<br>Grifo Repsol - Barranca<br>
         986362380 - 992770595 - 986165174<br>
         RUC 20600064879
-    </h6>
-    <h5>NOTA DE VENTA N° <?php echo $id; ?></h5>
-    <h6>FECHA: <?php echo $fechita; ?> &nbsp;|&nbsp; <?php echo $tipo; ?><br><?php echo htmlspecialchars($clsn); ?></h6>
+    </p>
+    <p class="nventa">NOTA DE VENTA N° <?php echo $id; ?></p>
+    <p class="info">
+        FECHA: <?php echo $fechita; ?><br>
+        <?php echo $tipo; ?><br>
+        <?php echo htmlspecialchars($clsn); ?>
+    </p>
     <hr>
     <table>
         <thead>
             <tr>
-                <th style="text-align:left;">[CANT.] DESCRIPCIÓN</th>
-                <th class="der">P/U</th>
-                <th class="der">TOTAL</th>
+                <th>[CANT.] DESCRIPCIÓN</th>
+                <th class="num">P/U</th>
+                <th class="num">TOTAL</th>
             </tr>
         </thead>
         <tbody>
             <?php echo $filas; ?>
             <tr class="total-row">
-                <td colspan="2" class="der">TOTAL: S/</td>
-                <td class="der"><?php echo number_format($tot, 2, '.', ','); ?></td>
-            </tr>
-            <tr>
-                <td colspan="3" class="letras"><b>SON: </b><?php echo $letras; ?></td>
+                <td colspan="2" class="num">TOTAL: S/</td>
+                <td class="num"><?php echo number_format($tot, 2, '.', ','); ?></td>
             </tr>
         </tbody>
     </table>
-    <p class="gracias">— GRACIAS POR SU COMPRA —</p>
+    <p class="letras"><b>IMPORTE EN LETRAS:</b> <?php echo $letras; ?></p>
+    <p class="gracias">GRACIAS X SU COMPRA</p>
+</div>
 <script>
     window.onload = function() { window.print(); };
     window.onafterprint = function() { window.close(); };

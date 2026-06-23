@@ -127,5 +127,5 @@ $dompdf->load_html(ob_get_clean());
 // Formato ticket 80mm de ancho, altura suficiente para muchos items
 $dompdf->set_paper(array(0,0,200,1000));
 $dompdf->render();
-$dompdf->stream('guia_entrega.pdf');
+$dompdf->stream('guia_entrega.pdf', ['Attachment' => 0]);
 ?>
