@@ -1,19 +1,16 @@
 <?php
 ini_set('display_errors', 0);
-ob_start();
-require_once 'inc/dompdf/autoload.inc.php';
 require 'inc/vendor/autoload.php';
 
 include('inc/control.php');
 include('inc/sdba/sdba.php');
 
-$venta_id      = isset($_GET['venta'])      ? intval($_GET['venta']) : 0;
-$modo_todo     = isset($_GET['todo'])      && $_GET['todo']      == '1';
+$venta_id        = isset($_GET['venta'])      ? intval($_GET['venta']) : 0;
+$modo_todo       = isset($_GET['todo'])       && $_GET['todo']       == '1';
 $modo_despachado = isset($_GET['despachado']) && $_GET['despachado'] == '1';
 
 if ($venta_id <= 0) die('Parametros invalidos');
 
-// Validar parámetros según modo
 if (!$modo_todo && !$modo_despachado) {
     if (isset($_GET['despachos']) && $_GET['despachos'] != '') {
         $despacho_ids = array_filter(array_map('intval', explode(',', $_GET['despachos'])));
@@ -25,7 +22,6 @@ if (!$modo_todo && !$modo_despachado) {
     if (empty($despacho_ids)) die('Parametros invalidos');
 }
 
-// Datos del cliente
 $db = Sdba::db();
 $venta_row = $db->query("
     SELECT v.*, IFNULL(cl.cliente,'VARIOS') as nombre_cliente,
@@ -41,9 +37,7 @@ $cliente_tel1   = $venta_row ? $venta_row['telefono']       : '';
 $cliente_tel2   = $venta_row ? $venta_row['telefono2']      : '';
 $fecha_guia     = date('d-m-Y');
 
-// Obtener items según modo
 if ($modo_todo) {
-    // Modo "Despachar TODO": todos los items del pedido con cantidad original
     $rows = $db->query("
         SELECT dv.cantidad, p.nom_prod
         FROM detalle_ventas dv
@@ -52,7 +46,6 @@ if ($modo_todo) {
         ORDER BY p.nom_prod
     ")->result();
 } elseif ($modo_despachado) {
-    // Modo "copia": suma de todo lo despachado real por producto
     $rows = $db->query("
         SELECT SUM(d.cantidad) as cantidad, p.nom_prod
         FROM despachos d
@@ -63,7 +56,6 @@ if ($modo_todo) {
         ORDER BY p.nom_prod
     ")->result();
 } else {
-    // Modo despacho individual: mostrar solo lo despachado en esos IDs
     $ids_str = implode(',', $despacho_ids);
     $rows = $db->query("
         SELECT d.cantidad, p.nom_prod
@@ -75,57 +67,93 @@ if ($modo_todo) {
     ")->result();
 }
 
-$filas_html = '';
+$filas = '';
 foreach ($rows as $r) {
-    $filas_html .= '<tr>
+    $filas .= '<tr>
         <td>' . htmlspecialchars($r['nom_prod']) . '</td>
-        <td style="text-align:center;">' . $r['cantidad'] . '</td>
+        <td class="num">' . $r['cantidad'] . '</td>
     </tr>';
 }
 ?>
-
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Guía de Entrega - v-<?php echo $venta_id; ?></title>
 <style>
-body { font-family: Helvetica, Sans-Serif; }
-thead th { font-size: 10px; font-weight: bold; border-bottom: 1px solid #000; }
-tbody td { font-size: 10px; }
-@page { margin-left: 0.4cm; margin-right: 0.4cm; margin-top: 0.4cm; margin-bottom: 0.4cm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: Helvetica, Arial, sans-serif;
+        background: #e8e8e8;
+        display: flex;
+        justify-content: center;
+        padding: 30px 0;
+    }
+
+    .ticket {
+        background: #fff;
+        width: 76mm;
+        padding: 10px 8px 16px 8px;
+    }
+
+    .nom   { font-size: 20px; font-weight: bold; text-align: center; line-height: 1.3; margin-bottom: 10px; }
+    .emp   { font-size: 12px; font-weight: bold; text-align: center; line-height: 1.5; margin-bottom: 10px; }
+    .nventa { font-size: 18px; font-weight: bold; text-align: center; margin: 10px 0; }
+    .info  { font-size: 13px; font-weight: bold; margin: 10px 0; line-height: 1.6; }
+
+    hr { border: none; border-top: 2px solid #000; margin: 8px 0; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+    thead th { font-size: 12px; font-weight: bold; padding: 3px 2px; text-align: left; border-bottom: 1px solid #000; }
+    thead th.num { text-align: center; }
+    tbody td { font-size: 12px; padding: 2px 2px; vertical-align: top; }
+    .num { text-align: center; white-space: nowrap; width: 50px; }
+
+    .gracias { font-size: 13px; font-weight: bold; text-align: center; margin-top: 14px; }
+
+    @media print {
+        body { background: none; padding: 0; display: block; }
+        .ticket { width: 100%; padding: 0; }
+        @page { margin: 0.4cm; size: 80mm auto; }
+    }
 </style>
-
-<h5 style="text-align:center;"><b>GUIA DE ENTREGA</b></h5>
-<h5 style="text-align:center;">Ferreteros y Constructores<br>"TORITO DE ORO"</h5>
-<h6 style="text-align:center;"><b>ENVIROMENTAL SENSE CONSULTING S.R.L. - ENSCO S.R.L.</b><br>
-    Mz-A sublote-01 Urb San José - Espaldas del Grifo Repsol - Barranca<br>
-    986362380 - 992770595 - 986165174<br>
-    RUC 20600064879
-</h6>
-<h6>
-    FECHA: <?php echo $fecha_guia; ?><br>
-    VENTA: v-<?php echo $venta_id; ?><br>
-    CLIENTE: <?php echo htmlspecialchars($cliente_nombre); ?><br>
-    <?php if ($cliente_tel1): ?>TEL: <?php echo htmlspecialchars($cliente_tel1); ?><br><?php endif; ?>
-    <?php if ($cliente_tel2): ?>TEL2: <?php echo htmlspecialchars($cliente_tel2); ?><br><?php endif; ?>
-</h6>
-<hr>
-<table width="100%">
-    <thead>
-        <tr>
-            <th>DESCRIPCIÓN</th>
-            <th style="text-align:center; width:60px;">CANT.</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php echo $filas_html; ?>
-    </tbody>
-</table>
-<hr>
-<h6 style="text-align:center;">GRACIAS X SU PREFERENCIA</h6>
-
-<?php
-use Dompdf\Dompdf;
-$dompdf = new DOMPDF();
-$dompdf->load_html(ob_get_clean());
-// Formato ticket 80mm de ancho, altura suficiente para muchos items
-$dompdf->set_paper(array(0,0,200,1000));
-$dompdf->render();
-$dompdf->stream('guia_entrega.pdf', ['Attachment' => 0]);
-?>
+</head>
+<body>
+<div class="ticket">
+    <p class="nom">Ferreteros y Constructores<br>"TORITO DE ORO"</p>
+    <p class="emp">
+        ENVIROMENTAL SENSE CONSULTING<br>S.R.L. - ENSCO S.R.L.<br>
+        Mz-A sublote-01 Urb San José - Espaldas del<br>Grifo Repsol - Barranca<br>
+        986362380 - 992770595 - 986165174<br>
+        RUC 20600064879
+    </p>
+    <p class="nventa">GUIA DE ENTREGA</p>
+    <p class="info">
+        FECHA: <?php echo $fecha_guia; ?><br>
+        VENTA: v-<?php echo $venta_id; ?><br>
+        CLIENTE: <?php echo htmlspecialchars($cliente_nombre); ?><br>
+        <?php if ($cliente_tel1): ?>TEL: <?php echo htmlspecialchars($cliente_tel1); ?><br><?php endif; ?>
+        <?php if ($cliente_tel2): ?>TEL2: <?php echo htmlspecialchars($cliente_tel2); ?><br><?php endif; ?>
+    </p>
+    <hr>
+    <table>
+        <thead>
+            <tr>
+                <th>DESCRIPCIÓN</th>
+                <th class="num">CANT.</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php echo $filas; ?>
+        </tbody>
+    </table>
+    <hr>
+    <p class="gracias">GRACIAS X SU PREFERENCIA</p>
+</div>
+<script>
+    window.onload = function() { window.print(); };
+    window.onafterprint = function() { window.close(); };
+</script>
+</body>
+</html>
