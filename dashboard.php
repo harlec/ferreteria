@@ -108,11 +108,14 @@ foreach ($ventas_mes_all as $v) {
             border-right: 1px solid #e2e8f0;
             background: #fff;
         }
-        .stat-item:first-child { border-radius: 10px 0 0 10px; }
-        .stat-item:last-child  { border-right: none; border-radius: 0 10px 10px 0; }
+        .stat-item {
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            background: #fff;
+        }
         .stat-wrap {
-            border: 1px solid #e2e8f0; border-radius: 10px;
-            display: flex; margin-bottom: 16px; background: #fff; overflow: hidden;
+            display: flex; gap: 12px; margin-bottom: 16px; background: transparent;
+            border: none;
         }
         .stat-icon { font-size: 13px; color: #94a3b8; margin-bottom: 6px; }
         .stat-icon i { margin-right: 4px; }
