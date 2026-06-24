@@ -97,12 +97,12 @@ foreach ($ventas_mes_all as $v) {
             background: #fff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
         .dcard-body { padding: 18px 20px; }
 
         /* ── Stat top row ── */
-        .stat-row { display: flex; gap: 0; margin-bottom: 16px; }
+        .stat-row { display: flex; gap: 0; margin-bottom: 12px; }
         .stat-item {
             flex: 1; padding: 18px 20px;
             border-right: 1px solid #e2e8f0;
@@ -114,7 +114,7 @@ foreach ($ventas_mes_all as $v) {
             background: #fff;
         }
         .stat-wrap {
-            display: flex; gap: 12px; margin-bottom: 16px; background: transparent;
+            display: flex; gap: 12px; margin-bottom: 12px; background: transparent;
             border: none;
         }
         .stat-icon { font-size: 13px; color: #94a3b8; margin-bottom: 6px; }
@@ -125,7 +125,7 @@ foreach ($ventas_mes_all as $v) {
         .stat-sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
 
         /* ── Two-col layout ── */
-        .two-col { display: flex; gap: 16px; margin-bottom: 16px; }
+        .two-col { display: flex; gap: 12px; margin-bottom: 12px; }
         .two-col .col-l { flex: 1; }
         .two-col .col-r { flex: 1; }
 
@@ -160,7 +160,7 @@ foreach ($ventas_mes_all as $v) {
         .comp-total-val   { font-size: 16px; font-weight: 700; color: #f97316; }
 
         /* ── Chart ── */
-        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .chart-title  { font-size: 13px; font-weight: 600; color: #475569; }
         .chart-title i { margin-right: 6px; color: #94a3b8; }
         .chart-total  { font-size: 13px; font-weight: 600; color: #64748b; }
@@ -190,7 +190,8 @@ foreach ($ventas_mes_all as $v) {
         .bp-amber { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
         .bp-green { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
 
-        .mb16 { margin-bottom: 16px; }
+        .mb16 { margin-bottom: 12px; }
+        .sec-label { margin-top: 8px; }
     </style>
 </head>
 <body class="mobile dashboard escritorio">
