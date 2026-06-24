@@ -6,20 +6,19 @@ $hoy        = date("Y-m-d");
 $mes_inicio = date("Y-m-01");
 
 $formas_nombre = ['1'=>'Efectivo','2'=>'Tar. Débito','3'=>'Tar. Crédito','4'=>'Crédito','5'=>'Yape','6'=>'Transferencia'];
+$formas_color  = ['1'=>'#f97316','2'=>'#3b82f6','3'=>'#8b5cf6','4'=>'#94a3b8','5'=>'#22c55e','6'=>'#06b6d4'];
 $tipos_nombre  = ['1'=>'Contado','2'=>'Crédito'];
 
-// Ventas del día
+// ── Ventas del día ──
 $v_dia = Sdba::table('ventas');
 $v_dia->where('fecha', $hoy)->and_where('estado !=', '2');
 $ventas_dia_list  = $v_dia->get();
 $ventas_dia_count = count($ventas_dia_list);
 $ventas_dia_total = 0;
-$venta_ids_dia = $dia_por_forma = $dia_forma_count = $dia_por_tipo = $dia_tipo_count = [];
+$venta_ids_dia = $dia_por_forma = $dia_forma_count = [];
 foreach ($ventas_dia_list as $v) {
-    $t = floatval($v['total']); $ventas_dia_total += $t; $venta_ids_dia[] = $v['id_venta'];
-    $tp = $v['tipo'];
-    if (!isset($dia_por_tipo[$tp])) { $dia_por_tipo[$tp] = 0; $dia_tipo_count[$tp] = 0; }
-    $dia_por_tipo[$tp] += $t; $dia_tipo_count[$tp]++;
+    $ventas_dia_total += floatval($v['total']);
+    $venta_ids_dia[]   = $v['id_venta'];
 }
 if (!empty($venta_ids_dia)) {
     $pq = Sdba::table('pagos'); $pq->where_in('venta', $venta_ids_dia);
@@ -30,52 +29,38 @@ if (!empty($venta_ids_dia)) {
     }
 }
 
-// Ventas del mes
+// ── Ventas del mes ──
 $v_mes = Sdba::table('ventas');
 $v_mes->where('fecha >=', $mes_inicio)->and_where('estado !=', '2');
 $ventas_mes_all   = $v_mes->get();
 $ventas_mes_count = count($ventas_mes_all);
 $ventas_mes_total = 0;
-$mes_por_forma = $mes_forma_count = $mes_por_tipo = $mes_tipo_count = [];
-foreach ($ventas_mes_all as $v) {
-    $t = floatval($v['total']); $ventas_mes_total += $t;
-    $tp = $v['tipo'];
-    if (!isset($mes_por_tipo[$tp])) { $mes_por_tipo[$tp] = 0; $mes_tipo_count[$tp] = 0; }
-    $mes_por_tipo[$tp] += $t; $mes_tipo_count[$tp]++;
-}
+foreach ($ventas_mes_all as $v) $ventas_mes_total += floatval($v['total']);
 
-// Productos
-$total_productos = Sdba::table('productos')->where('estado !=', '0')->total();
-$stock_bajo      = Sdba::table('productos')->where('estado !=', '0')->and_where('stockp <=', '5')->total();
+// ── Productos ──
+$total_productos  = Sdba::table('productos')->where('estado !=', '0')->total();
+$stock_bajo       = Sdba::table('productos')->where('estado !=', '0')->and_where('stockp <=', '5')->total();
+$db               = Sdba::db();
+$stock_neg_list   = $db->query("SELECT nom_prod, stockp FROM productos WHERE estado != '0' AND stockp < 0 ORDER BY stockp ASC LIMIT 5")->result();
 
-// Gráfico 7 días
+// ── Gráfico 7 días ──
 $chart_labels = $chart_data = [];
 for ($d = 6; $d >= 0; $d--) {
     $fd = date("Y-m-d", strtotime("-$d days"));
     $chart_labels[] = date("d/m", strtotime($fd));
     $vc = Sdba::table('ventas'); $vc->where('fecha', $fd)->and_where('estado !=', '2');
-    $td = $vc->sum('total'); $chart_data[] = $td ? floatval($td) : 0;
+    $td = $vc->sum('total'); $chart_data[] = $td ? round(floatval($td), 2) : 0;
 }
+$chart_total = array_sum($chart_data);
 
-// Formas mes
+// ── Comprobantes del mes ──
 $venta_ids_mes = array_column($ventas_mes_all, 'id_venta');
-if (!empty($venta_ids_mes)) {
-    $pmq = Sdba::table('pagos'); $pmq->where_in('venta', $venta_ids_mes);
-    foreach ($pmq->get() as $p) {
-        $f = $p['forma']; $m = floatval($p['monto']);
-        if (!isset($mes_por_forma[$f])) { $mes_por_forma[$f] = 0; $mes_forma_count[$f] = 0; }
-        $mes_por_forma[$f] += $m; $mes_forma_count[$f]++;
-    }
-}
-
-// Comprobantes mes
 $comp_tipo_map = [];
 if (!empty($venta_ids_mes)) {
     $cq = Sdba::table('comprobantes'); $cq->where_in('venta', $venta_ids_mes);
-    foreach ($cq->get() as $c) {
+    foreach ($cq->get() as $c)
         if (($c['tipo']=='F'||$c['tipo']=='B') && !isset($comp_tipo_map[$c['venta']]))
             $comp_tipo_map[$c['venta']] = $c['tipo'];
-    }
 }
 $boleta_count=$boleta_total=$factura_count=$factura_total=$nota_count=$nota_total=0;
 foreach ($ventas_mes_all as $v) {
@@ -97,62 +82,112 @@ foreach ($ventas_mes_all as $v) {
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" crossorigin="anonymous">
     <link rel="stylesheet" href="/assets/css/sweetalert2.min.css">
     <style>
-        body.dashboard { background: #f5f6fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body.dashboard { background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1e293b; }
 
-        .page { padding: 28px 24px; }
+        .page { padding: 24px 20px 40px; }
 
-        .page-header { margin-bottom: 28px; }
-        .page-header h2 { font-size: 22px; font-weight: 700; color: #1e293b; margin: 0 0 2px; }
-        .page-header p  { font-size: 13px; color: #94a3b8; margin: 0; }
-
-        .section-title {
-            font-size: 11px; font-weight: 600; text-transform: uppercase;
-            letter-spacing: .8px; color: #94a3b8; margin: 0 0 12px;
+        /* ── Section label ── */
+        .sec-label {
+            font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+            text-transform: uppercase; color: #94a3b8; margin: 0 0 10px;
         }
 
-        /* Card base */
-        .card {
+        /* ── Card ── */
+        .dcard {
             background: #fff;
-            border: 1px solid #e8ecf0;
+            border: 1px solid #e2e8f0;
             border-radius: 10px;
-            margin-bottom: 20px;
-            overflow: hidden;
+            margin-bottom: 16px;
         }
+        .dcard-body { padding: 18px 20px; }
 
-        /* Stat card */
-        .stat-body { padding: 20px; }
-        .stat-top { display: flex; justify-content: space-between; align-items: flex-start; }
-        .stat-info-label { font-size: 12px; color: #64748b; font-weight: 500; margin-bottom: 6px; }
-        .stat-info-value { font-size: 28px; font-weight: 700; color: #1e293b; line-height: 1; }
-        .stat-info-sub   { font-size: 12px; color: #94a3b8; margin-top: 4px; }
-        .stat-icon-wrap {
-            width: 40px; height: 40px; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px; flex-shrink: 0;
+        /* ── Stat top row ── */
+        .stat-row { display: flex; gap: 0; margin-bottom: 16px; }
+        .stat-item {
+            flex: 1; padding: 18px 20px;
+            border-right: 1px solid #e2e8f0;
+            background: #fff;
         }
-        .ic-blue   { background: #eff6ff; color: #3b82f6; }
-        .ic-green  { background: #f0fdf4; color: #22c55e; }
-        .ic-amber  { background: #fffbeb; color: #f59e0b; }
-        .ic-red    { background: #fef2f2; color: #ef4444; }
-        .ic-violet { background: #f5f3ff; color: #8b5cf6; }
-        .ic-teal   { background: #f0fdfa; color: #14b8a6; }
-        .ic-indigo { background: #eef2ff; color: #6366f1; }
+        .stat-item:first-child { border-radius: 10px 0 0 10px; }
+        .stat-item:last-child  { border-right: none; border-radius: 0 10px 10px 0; }
+        .stat-wrap {
+            border: 1px solid #e2e8f0; border-radius: 10px;
+            display: flex; margin-bottom: 16px; background: #fff; overflow: hidden;
+        }
+        .stat-icon { font-size: 13px; color: #94a3b8; margin-bottom: 6px; }
+        .stat-icon i { margin-right: 4px; }
+        .stat-label { font-size: 12px; color: #64748b; margin-bottom: 4px; font-weight: 500; }
+        .stat-val { font-size: 28px; font-weight: 700; color: #1e293b; line-height: 1; }
+        .stat-val.accent { color: #f97316; }
+        .stat-sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
 
-        /* Breakdown */
-        .breakdown { border-top: 1px solid #f1f5f9; padding: 10px 20px 14px; }
-        .brow { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; color: #64748b; }
-        .brow span:last-child { font-weight: 600; color: #334155; }
+        /* ── Two-col layout ── */
+        .two-col { display: flex; gap: 16px; margin-bottom: 16px; }
+        .two-col .col-l { flex: 1; }
+        .two-col .col-r { flex: 1; }
 
-        /* Clickable */
-        a.card-link { text-decoration: none; color: inherit; display: block; }
-        a.card-link:hover .card { border-color: #c7d2fe; background: #fafbff; }
+        /* ── Payment list ── */
+        .pay-title { font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 14px; }
+        .pay-title i { margin-right: 6px; color: #94a3b8; }
+        .pay-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 0; border-bottom: 1px solid #f1f5f9;
+        }
+        .pay-row:last-child { border-bottom: none; }
+        .pay-left { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #334155; }
+        .pay-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+        .pay-right { text-align: right; }
+        .pay-amount { font-size: 14px; font-weight: 600; color: #1e293b; }
+        .pay-count  { font-size: 11px; color: #94a3b8; }
 
-        /* Chart */
-        .chart-body { padding: 20px; }
-        .chart-header { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 16px; }
+        /* ── Comprobantes ── */
+        .comp-title { font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 14px; }
+        .comp-title i { margin-right: 6px; color: #94a3b8; }
+        .comp-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 9px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px;
+        }
+        .comp-row:last-child { border-bottom: none; }
+        .comp-name { color: #334155; font-weight: 500; }
+        .comp-right { text-align: right; }
+        .comp-amount { font-weight: 600; color: #1e293b; font-size: 14px; }
+        .comp-count  { font-size: 11px; color: #94a3b8; }
+        .comp-total-row { display: flex; justify-content: space-between; padding-top: 10px; margin-top: 2px; border-top: 2px solid #f1f5f9; }
+        .comp-total-label { font-size: 13px; font-weight: 700; color: #334155; }
+        .comp-total-val   { font-size: 16px; font-weight: 700; color: #f97316; }
 
-        /* Divider between sections */
-        .section-gap { margin-top: 8px; }
+        /* ── Chart ── */
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .chart-title  { font-size: 13px; font-weight: 600; color: #475569; }
+        .chart-title i { margin-right: 6px; color: #94a3b8; }
+        .chart-total  { font-size: 13px; font-weight: 600; color: #64748b; }
+        .chart-total span { color: #1e293b; }
+
+        /* ── Alertas ── */
+        .alert-row {
+            display: flex; align-items: center; gap: 14px;
+            padding: 12px 20px; border-bottom: 1px solid #f1f5f9;
+        }
+        .alert-row:last-child { border-bottom: none; }
+        .alert-icon-wrap {
+            width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
+        }
+        .ai-red    { background: #fef2f2; color: #ef4444; }
+        .ai-amber  { background: #fffbeb; color: #f59e0b; }
+        .ai-green  { background: #f0fdf4; color: #22c55e; }
+        .alert-text { flex: 1; }
+        .alert-text strong { font-size: 13px; font-weight: 600; color: #1e293b; display: block; }
+        .alert-text span   { font-size: 12px; color: #64748b; }
+        .badge-pill {
+            font-size: 11px; font-weight: 600; padding: 3px 10px;
+            border-radius: 20px; white-space: nowrap;
+        }
+        .bp-red   { background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
+        .bp-amber { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+        .bp-green { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+        .mb16 { margin-bottom: 16px; }
     </style>
 </head>
 <body class="mobile dashboard escritorio">
@@ -173,185 +208,133 @@ foreach ($ventas_mes_all as $v) {
 <div class="kbg">
 <div class="page">
 
-    <div class="page-header">
-        <h2>Dashboard</h2>
-        <p><?php echo date('l, d \d\e F \d\e Y'); ?></p>
+    <!-- ── RESUMEN DE HOY ── -->
+    <p class="sec-label">Resumen de hoy</p>
+    <div class="stat-wrap mb16">
+        <div class="stat-item">
+            <div class="stat-icon"><i class="fas fa-cash-register"></i> Ventas hoy</div>
+            <div class="stat-val accent">S/ <?php echo number_format($ventas_dia_total, 2); ?></div>
+            <div class="stat-sub"><?php echo $ventas_dia_count; ?> transacciones</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon"><i class="fas fa-calendar-alt"></i> Ventas del mes</div>
+            <div class="stat-val">S/ <?php echo number_format($ventas_mes_total, 2); ?></div>
+            <div class="stat-sub"><?php echo $ventas_mes_count; ?> transacciones</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon"><i class="fas fa-boxes"></i> Productos activos</div>
+            <div class="stat-val"><?php echo number_format($total_productos); ?></div>
+            <div class="stat-sub">en inventario</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i> Stock bajo</div>
+            <div class="stat-val <?php echo $stock_bajo > 0 ? 'accent' : ''; ?>"><?php echo number_format($stock_bajo); ?></div>
+            <div class="stat-sub">requieren reposición</div>
+        </div>
     </div>
 
-    <!-- HOY -->
-    <p class="section-title">Hoy</p>
-    <div class="row">
-
-        <div class="col-md-4 col-sm-6">
-            <div class="card">
-                <div class="stat-body">
-                    <div class="stat-top">
-                        <div>
-                            <div class="stat-info-label">Ventas del día</div>
-                            <div class="stat-info-value">S/ <?php echo number_format($ventas_dia_total, 2); ?></div>
-                            <div class="stat-info-sub"><?php echo $ventas_dia_count; ?> venta<?php echo $ventas_dia_count != 1 ? 's' : ''; ?></div>
-                        </div>
-                        <div class="stat-icon-wrap ic-green"><i class="fas fa-cash-register"></i></div>
-                    </div>
-                </div>
-                <?php if (!empty($dia_por_tipo)): ?>
-                <div class="breakdown">
-                    <?php foreach ($dia_por_tipo as $tk => $tv): ?>
-                    <div class="brow">
-                        <span><?php echo $tipos_nombre[$tk] ?? 'Otro'; ?> · <?php echo $dia_tipo_count[$tk]; ?></span>
-                        <span>S/ <?php echo number_format($tv, 2); ?></span>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-                <?php if (!empty($dia_por_forma)): ?>
-                <div class="breakdown" style="border-top:1px dashed #f1f5f9;">
-                    <?php foreach ($dia_por_forma as $fk => $fv): ?>
-                    <div class="brow">
-                        <span><?php echo $formas_nombre[$fk] ?? 'Otro'; ?></span>
-                        <span>S/ <?php echo number_format($fv, 2); ?></span>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <div class="col-md-4 col-sm-6">
-            <div class="card">
-                <div class="stat-body">
-                    <div class="stat-top">
-                        <div>
-                            <div class="stat-info-label">Productos activos</div>
-                            <div class="stat-info-value"><?php echo $total_productos; ?></div>
-                            <div class="stat-info-sub">en catálogo</div>
-                        </div>
-                        <div class="stat-icon-wrap ic-amber"><i class="fas fa-boxes"></i></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 col-sm-6">
-            <div class="card">
-                <div class="stat-body">
-                    <div class="stat-top">
-                        <div>
-                            <div class="stat-info-label">Stock bajo</div>
-                            <div class="stat-info-value" style="color:<?php echo $stock_bajo > 0 ? '#ef4444' : '#22c55e'; ?>">
-                                <?php echo $stock_bajo; ?>
+    <!-- ── FORMAS DE PAGO + COMPROBANTES ── -->
+    <div class="two-col">
+        <div class="col-l">
+            <div class="dcard">
+                <div class="dcard-body">
+                    <div class="pay-title"><i class="fas fa-wallet"></i> Formas de pago hoy</div>
+                    <?php if (!empty($dia_por_forma)): ?>
+                        <?php foreach ($dia_por_forma as $fk => $fv): ?>
+                        <div class="pay-row">
+                            <div class="pay-left">
+                                <span class="pay-dot" style="background:<?php echo $formas_color[$fk] ?? '#94a3b8'; ?>;"></span>
+                                <?php echo $formas_nombre[$fk] ?? 'Otro'; ?>
                             </div>
-                            <div class="stat-info-sub">productos con ≤ 5 unidades</div>
+                            <div class="pay-right">
+                                <div class="pay-amount">S/ <?php echo number_format($fv, 2); ?></div>
+                                <div class="pay-count"><?php echo $dia_forma_count[$fk]; ?> venta<?php echo $dia_forma_count[$fk] != 1 ? 's' : ''; ?></div>
+                            </div>
                         </div>
-                        <div class="stat-icon-wrap ic-red"><i class="fas fa-exclamation-triangle"></i></div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p style="color:#94a3b8;font-size:13px;text-align:center;padding:20px 0;">Sin ventas registradas hoy</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <div class="col-r">
+            <div class="dcard">
+                <div class="dcard-body">
+                    <div class="comp-title"><i class="fas fa-file-invoice"></i> Comprobantes del mes</div>
+                    <div class="comp-row">
+                        <span class="comp-name">Boletas</span>
+                        <div class="comp-right">
+                            <div class="comp-amount">S/ <?php echo number_format($boleta_total, 2); ?></div>
+                            <div class="comp-count"><?php echo $boleta_count; ?> docs</div>
+                        </div>
+                    </div>
+                    <div class="comp-row">
+                        <span class="comp-name">Facturas</span>
+                        <div class="comp-right">
+                            <div class="comp-amount">S/ <?php echo number_format($factura_total, 2); ?></div>
+                            <div class="comp-count"><?php echo $factura_count; ?> docs</div>
+                        </div>
+                    </div>
+                    <div class="comp-row">
+                        <span class="comp-name">Notas de venta</span>
+                        <div class="comp-right">
+                            <div class="comp-amount">S/ <?php echo number_format($nota_total, 2); ?></div>
+                            <div class="comp-count"><?php echo $nota_count; ?> docs</div>
+                        </div>
+                    </div>
+                    <div class="comp-total-row">
+                        <span class="comp-total-label">Total mes</span>
+                        <span class="comp-total-val">S/ <?php echo number_format($ventas_mes_total, 2); ?></span>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 
-    <!-- MES -->
-    <p class="section-title section-gap">Este mes — <?php echo date('F Y'); ?></p>
-    <div class="row">
-
-        <div class="col-md-3 col-sm-6">
-            <div class="card">
-                <div class="stat-body">
-                    <div class="stat-top">
-                        <div>
-                            <div class="stat-info-label">Total ventas</div>
-                            <div class="stat-info-value">S/ <?php echo number_format($ventas_mes_total, 2); ?></div>
-                            <div class="stat-info-sub"><?php echo $ventas_mes_count; ?> ventas</div>
-                        </div>
-                        <div class="stat-icon-wrap ic-blue"><i class="fas fa-chart-line"></i></div>
-                    </div>
-                </div>
-                <?php if (!empty($mes_por_tipo)): ?>
-                <div class="breakdown">
-                    <?php foreach ($mes_por_tipo as $tk => $tv): ?>
-                    <div class="brow">
-                        <span><?php echo $tipos_nombre[$tk] ?? 'Otro'; ?> · <?php echo $mes_tipo_count[$tk]; ?></span>
-                        <span>S/ <?php echo number_format($tv, 2); ?></span>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-                <?php if (!empty($mes_por_forma)): ?>
-                <div class="breakdown" style="border-top:1px dashed #f1f5f9;">
-                    <?php foreach ($mes_por_forma as $fk => $fv): ?>
-                    <div class="brow">
-                        <span><?php echo $formas_nombre[$fk] ?? 'Otro'; ?></span>
-                        <span>S/ <?php echo number_format($fv, 2); ?></span>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
+    <!-- ── GRÁFICO ── -->
+    <div class="dcard mb16">
+        <div class="dcard-body">
+            <div class="chart-header">
+                <div class="chart-title"><i class="fas fa-chart-bar"></i> Ventas — últimos 7 días</div>
+                <div class="chart-total">Total: <span>S/ <?php echo number_format($chart_total, 2); ?></span></div>
             </div>
+            <canvas id="chartVentas" height="75"></canvas>
         </div>
-
-        <div class="col-md-3 col-sm-6">
-            <a href="ventas.php?tipo_comp=B" class="card-link">
-                <div class="card">
-                    <div class="stat-body">
-                        <div class="stat-top">
-                            <div>
-                                <div class="stat-info-label">Boletas</div>
-                                <div class="stat-info-value">S/ <?php echo number_format($boleta_total, 2); ?></div>
-                                <div class="stat-info-sub"><?php echo $boleta_count; ?> emitidas</div>
-                            </div>
-                            <div class="stat-icon-wrap ic-teal"><i class="fas fa-file-invoice"></i></div>
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col-md-3 col-sm-6">
-            <a href="ventas.php?tipo_comp=F" class="card-link">
-                <div class="card">
-                    <div class="stat-body">
-                        <div class="stat-top">
-                            <div>
-                                <div class="stat-info-label">Facturas</div>
-                                <div class="stat-info-value">S/ <?php echo number_format($factura_total, 2); ?></div>
-                                <div class="stat-info-sub"><?php echo $factura_count; ?> emitidas</div>
-                            </div>
-                            <div class="stat-icon-wrap ic-violet"><i class="fas fa-file-invoice-dollar"></i></div>
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col-md-3 col-sm-6">
-            <a href="ventas.php?tipo_comp=NV" class="card-link">
-                <div class="card">
-                    <div class="stat-body">
-                        <div class="stat-top">
-                            <div>
-                                <div class="stat-info-label">Notas de venta</div>
-                                <div class="stat-info-value">S/ <?php echo number_format($nota_total, 2); ?></div>
-                                <div class="stat-info-sub"><?php echo $nota_count; ?> emitidas</div>
-                            </div>
-                            <div class="stat-icon-wrap ic-indigo"><i class="fas fa-receipt"></i></div>
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
-
     </div>
 
-    <!-- GRÁFICO -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="chart-body">
-                    <div class="chart-header">Ventas — últimos 7 días</div>
-                    <canvas id="chartVentas" height="65"></canvas>
-                </div>
+    <!-- ── ALERTAS ── -->
+    <p class="sec-label">Alertas</p>
+    <div class="dcard">
+        <?php foreach ($stock_neg_list as $sn): ?>
+        <div class="alert-row">
+            <div class="alert-icon-wrap ai-red"><i class="fas fa-times-circle"></i></div>
+            <div class="alert-text">
+                <strong>Stock negativo detectado</strong>
+                <span><?php echo htmlspecialchars($sn['nom_prod']); ?> — stock: <?php echo $sn['stockp']; ?> unidades</span>
             </div>
+            <span class="badge-pill bp-red">Urgente</span>
+        </div>
+        <?php endforeach; ?>
+
+        <?php if ($stock_bajo > 0): ?>
+        <div class="alert-row">
+            <div class="alert-icon-wrap ai-amber"><i class="fas fa-box"></i></div>
+            <div class="alert-text">
+                <strong><?php echo $stock_bajo; ?> productos con stock bajo</strong>
+                <span>Nivel ≤ 5 unidades — revisar órdenes de compra</span>
+            </div>
+            <span class="badge-pill bp-amber">Atención</span>
+        </div>
+        <?php endif; ?>
+
+        <div class="alert-row">
+            <div class="alert-icon-wrap ai-green"><i class="fas fa-check"></i></div>
+            <div class="alert-text">
+                <strong>Sistema operando con normalidad</strong>
+                <span><?php echo $ventas_dia_count; ?> venta<?php echo $ventas_dia_count != 1 ? 's' : ''; ?> registrada<?php echo $ventas_dia_count != 1 ? 's' : ''; ?> hoy sin errores</span>
+            </div>
+            <span class="badge-pill bp-green">OK</span>
         </div>
     </div>
 
@@ -362,14 +345,19 @@ foreach ($ventas_mes_all as $v) {
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="assets/js/sweetalert2.all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>
+Chart.register(ChartDataLabels);
+var data = <?php echo json_encode($chart_data); ?>;
+var colors = data.map(function(v, i) { return i === data.length - 1 ? '#f97316' : '#cbd5e1'; });
+
 new Chart(document.getElementById('chartVentas'), {
     type: 'bar',
     data: {
         labels: <?php echo json_encode($chart_labels); ?>,
         datasets: [{
-            data: <?php echo json_encode($chart_data); ?>,
-            backgroundColor: '#3b82f6',
+            data: data,
+            backgroundColor: colors,
             borderRadius: 5,
             borderSkipped: false
         }]
@@ -380,19 +368,29 @@ new Chart(document.getElementById('chartVentas'), {
             legend: { display: false },
             tooltip: {
                 callbacks: { label: c => ' S/ ' + c.parsed.y.toLocaleString('es-PE', {minimumFractionDigits:2}) }
+            },
+            datalabels: {
+                anchor: 'end', align: 'end',
+                formatter: function(v) {
+                    if (v === 0) return '';
+                    return v >= 1000 ? 'S/' + (v/1000).toFixed(1) + 'k' : 'S/' + v.toFixed(0);
+                },
+                font: { size: 10, weight: '600' },
+                color: function(ctx) { return ctx.dataIndex === data.length - 1 ? '#f97316' : '#64748b'; }
             }
         },
         scales: {
             y: {
                 beginAtZero: true,
                 grid: { color: '#f1f5f9', drawBorder: false },
-                ticks: { callback: v => 'S/ ' + v.toLocaleString(), font: { size: 11 } }
+                ticks: { callback: v => 'S/' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v), font: { size: 11 }, color: '#94a3b8' }
             },
             x: {
                 grid: { display: false },
-                ticks: { font: { size: 11 } }
+                ticks: { font: { size: 11 }, color: '#94a3b8' }
             }
-        }
+        },
+        layout: { padding: { top: 20 } }
     }
 });
 </script>
