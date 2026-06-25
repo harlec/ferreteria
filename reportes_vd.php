@@ -262,7 +262,7 @@ foreach ($ventas_list as $value) {
                     .column(5)
                     .data()
                     .reduce( function (a, b) {
-                        return Math.ceil(intVal(a) + intVal(b));
+                        return intVal(a) + intVal(b);
                     },0 );
 
                 // Total over this page
