@@ -5,8 +5,9 @@ if ($_SESSION['type']=='operador') {
 }
 
 include('inc/sdba/sdba.php'); // include main file
+$fecha_filtro = isset($_GET['fecha']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['fecha']) ? $_GET['fecha'] : date('Y-m-d');
 $ventas = Sdba::table('ventas');
-$ventas->where('fecha', date('Y-m-d'))->and_where('estado !=', '2');
+$ventas->where('fecha', $fecha_filtro)->and_where('estado !=', '2');
 $ventas_list = $ventas->get();
 
 $formas_pago = ['1'=>'Efectivo','2'=>'Tar. Débito','3'=>'Tar. Crédito','4'=>'Crédito','5'=>'Yape','6'=>'Transferencia'];
@@ -129,6 +130,16 @@ foreach ($ventas_list as $value) {
 			<div class="cuerpofull">
 				<div class="titulo">
 					<h3>Reporte Venta diaria</h3>
+				</div>
+				<div style="padding:0 16px 12px 16px;">
+					<form method="GET" action="reportes_vd.php" style="display:flex;align-items:center;gap:10px;">
+						<label style="margin:0;font-weight:600;">Fecha:</label>
+						<input type="date" name="fecha" class="form-control" style="width:180px;" value="<?php echo htmlspecialchars($fecha_filtro); ?>" onchange="this.form.submit()">
+						<button type="submit" class="btn btn-primary btn-sm">Ver</button>
+						<?php if ($fecha_filtro !== date('Y-m-d')): ?>
+							<a href="reportes_vd.php" class="btn btn-default btn-sm">Hoy</a>
+						<?php endif; ?>
+					</form>
 				</div>
 				<div class="container-fluid">
 					<div class="row">
@@ -274,7 +285,7 @@ foreach ($ventas_list as $value) {
                 //     }, 0 );
 
                 // Update footer
-                $( api.column( 5 ).footer() ).html(total);
+                $( api.column( 5 ).footer() ).html(total.toFixed(2));
                 console.log(total);
             }
 		});		

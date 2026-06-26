@@ -274,7 +274,7 @@ foreach ($ventas_list1 as $value) {
                     .column(5)
                     .data()
                     .reduce( function (a, b) {
-                        return Math.ceil(intVal(a) + intVal(b));
+                        return intVal(a) + intVal(b);
                     },0 );
 
                 // Total over this page
@@ -286,7 +286,7 @@ foreach ($ventas_list1 as $value) {
                 //     }, 0 );
 
                 // Update footer
-                $( api.column( 5 ).footer() ).html(total);
+                $( api.column( 5 ).footer() ).html(total.toFixed(2));
                 console.log(total);
             }
 		});	
