@@ -151,6 +151,7 @@ $facturan = 0;
 												  		<input type="hidden" name="forma" name="forma" value="<?php echo $forma_pl; ?>">
 												  		<input type="hidden" name="venta_id" name="venta_id" value="<?php echo $venta_ids_str; ?>">
 												  		<input class="form-control" type="hidden" name="facturan" value="<?php echo $facturan; ?>">
+											<input type="hidden" name="tipo" value="<?php echo $tipo; ?>">
 												  			  	
 													<br>
 												  	<div class="table-responsive">
@@ -226,7 +227,7 @@ $facturan = 0;
 							</div>
 
 							<div class="col-xs-12 mos" style="display: none;">
-								<input type="date" name="fechac" class="form-control"><br>
+								<input type="date" name="fechac" class="form-control" value="<?php echo isset($venta_l['fecha_pago']) ? $venta_l['fecha_pago'] : ''; ?>"><br>
 							</div>
 							<div class="col-xs-12 mos" style="display: none;">
 								<input readonly type="text" name="montoc" class="form-control" value="<?php echo $tot; ?>"> <br>

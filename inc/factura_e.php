@@ -14,6 +14,8 @@ $venta_id = $_POST['venta_id'];
 // Soporte para múltiples IDs (ej: "5,6,7")
 $venta_ids = array_filter(array_map('intval', explode(',', $venta_id)));
 $venta_id_principal = $venta_ids[0]; // para el comprobante
+$tipo = isset($_POST['tipo']) ? $_POST['tipo'] : '1';
+$es_credito = ($tipo == '2');
 $fechac = $_POST['fechac'];
 $montoc = $_POST['montoc'];
 
@@ -74,13 +76,21 @@ for ($i=0; $i < count($platos); $i++) {
     
 }
 
-$ventac = array(
+if ($es_credito && !empty($fechac)) {
+    $fecha_vencimiento = date("d-m-Y", strtotime($fechac));
+    $condiciones_pago = "Credito";
+    $ventac = array(
         array(
             "cuota" => 1,
-            "fecha_de_pago" => $fechac,
+            "fecha_de_pago" => $fecha_vencimiento,
             "importe" => $montoc
         )
     );
+} else {
+    $fecha_vencimiento = "";
+    $condiciones_pago = "Contado";
+    $ventac = array();
+}
 $totalg = $total_gravada/1.18;
 $totaligv = $total_gravada - $totalg;
 
@@ -116,7 +126,7 @@ $data = array(
     "cliente_email_1"                   => "",
     "cliente_email_2"                   => "",
     "fecha_de_emision"                  => $fechita,
-    "fecha_de_vencimiento"              => "",
+    "fecha_de_vencimiento"              => $fecha_vencimiento,
     "moneda"                            => "1",
     "tipo_de_cambio"                    => "",
     "porcentaje_de_igv"                 => "18.00",
@@ -145,7 +155,7 @@ $data = array(
     "enviar_automaticamente_a_la_sunat" => "true",
     "enviar_automaticamente_al_cliente" => "false",
     "codigo_unico"                      => "",
-    "condiciones_de_pago"               => "",
+    "condiciones_de_pago"               => $condiciones_pago,
     "medio_de_pago"                     => $forma,
     "placa_vehiculo"                    => "",
     "orden_compra_servicio"             => "",
