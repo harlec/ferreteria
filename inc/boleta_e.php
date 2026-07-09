@@ -68,6 +68,10 @@ for ($i=0; $i < count($platos); $i++) {
     );
     
 }
+// El total se recalcula siempre a partir de las líneas (gravada + exonerada),
+// nunca se confía en el valor que llega en $_POST['total'] (editable a mano
+// en boleta.php y susceptible a desincronizarse al borrar/editar filas).
+$total = $total_gravada + $total_exonerada;
 $totalg = $total_gravada/1.18;
 $totaligv = $total_gravada - $totalg;
 
