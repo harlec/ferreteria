@@ -11,7 +11,28 @@ $tienda = $_SESSION['tienda'];
 	$ventas1->order_by('id_comprobante','asc');
 
 	$ventas_list1 = $ventas1->get();
-	
+
+	// Mapa id_comprobante => fila, para resolver la nota de crédito asociada a cada comprobante
+	$por_id = array();
+	foreach ($ventas_list1 as $v) {
+		$por_id[$v['id_comprobante']] = $v;
+	}
+	// Si la nota de crédito se emitió en un mes distinto al filtro actual, se busca aparte
+	$faltantes = array();
+	foreach ($ventas_list1 as $v) {
+		if (!empty($v['nota_credito_id']) && !isset($por_id[$v['nota_credito_id']])) {
+			$faltantes[] = $v['nota_credito_id'];
+		}
+	}
+	if (!empty($faltantes)) {
+		$nc_extra_q = Sdba::table('comprobantes');
+		$nc_extra_q->where_in('id_comprobante', $faltantes);
+		$nc_extra = $nc_extra_q->get();
+		foreach ($nc_extra as $nc) {
+			$por_id[$nc['id_comprobante']] = $nc;
+		}
+	}
+
 	$i=0;
 	foreach ($ventas_list1 as $value) {
 
@@ -19,6 +40,8 @@ $tienda = $_SESSION['tienda'];
 		$anul = 'No';
 		$muestra = 'style="display:none"';
 		$muestra1 = '';
+		$enlacea = '<td></td>';
+		$enlacen = '<td></td>';
 		$newDate = date("d/m/Y", strtotime($value['fecha']));
 		switch ($value['tipo']) {
 			case 'F':
@@ -31,7 +54,20 @@ $tienda = $_SESSION['tienda'];
 				$enlacea = '<td><a title="Anular comprobante" class="anular" href="anular_comprobante.php?id='.$value['id_comprobante'].'">Anular</a></td>';
 				$enlacen = '<td><a title="generar nota de crédito" class="gnota anular" href="generar_nota_credito_b.php?id='.$value['id_comprobante'].'">Not cred.</a></td>';
 				break;
+			case 'FC':
+				$tipo = '07 (N.Cred. Factura)';
+				break;
+			case 'NB':
+				$tipo = '07 (N.Cred. Boleta)';
+				break;
+			default:
+				$tipo = $value['tipo'];
+				break;
 		}
+
+		// Anulado = comunicación de baja aceptada (state=2) O nota de crédito emitida (columna 'anulado')
+		$es_anulado = ($value['state']=='2' || $value['anulado']=='1');
+
 		if ($value['state']=='1') {
 			$anulado = 'anulado-pendiente';
 			$muestra = 'style="display:block"';
@@ -39,29 +75,40 @@ $tienda = $_SESSION['tienda'];
 			$totalu = 0;
 			$anul = 'Si';
 		}
-		if ($value['state']=='2') {
+		if ($es_anulado) {
 			$anulado = 'anulado';
 			$anul = 'Si';
 			$muestra = 'style="display:none"';
 			$muestra1 = 'style="display:none"';
 			$totalu = 0;
+			// Ya está anulado (por baja o por nota de crédito): no debe poder volver a anularse
+			$enlacea = '<td></td>';
+			$enlacen = '<td></td>';
 		}
-		if($value['state']=='0'){
+		if($value['state']=='0' && $value['anulado']!='1'){
 			$totalu = $value['total'];
 		}
-		$datos .='<tr class="'.$anulado.'"> 
-    			<td>'.$newDate.'</td> 
-    			<td>'.$tipo.'</td> 
-    			<td>'.$value['serie'].'</td> 
-    			<td>'.$value['numero'].'</td> 
+
+		$nc_cell = '<td></td>';
+		if (!empty($value['nota_credito_id']) && isset($por_id[$value['nota_credito_id']])) {
+			$nc = $por_id[$value['nota_credito_id']];
+			$nc_cell = '<td><a title="ver nota de crédito" target="_blank" href="'.$nc['url'].'.pdf">'.$nc['serie'].'-'.$nc['numero'].'</a></td>';
+		}
+
+		$datos .='<tr class="'.$anulado.'">
+    			<td>'.$newDate.'</td>
+    			<td>'.$tipo.'</td>
+    			<td>'.$value['serie'].'</td>
+    			<td>'.$value['numero'].'</td>
     			<td>'.$value['doc'].'</td>
-    			<td>'.$value['nombre'].'</td>  
+    			<td>'.$value['nombre'].'</td>
     			<td>'.round($value['grabada'],2).'</td>
     			<td>'.round($value['igv'],2).'</td>
     			<td>'.$totalu.'</td>
     			<td>'.$anul.'</td>
+    			'.$nc_cell.'
     			<td><a title="descargar pdf" class="pdf" target="_blank" href="'.$value['url'].'.pdf">pdf</a></td>
-    			
+
     			'.$enlacen.'
     			<td><a title="Verificar anulacion!" '.$muestra.' class="" href="verificar_anulacion.php?id='.$value['id_comprobante'].'"><img src="assets/img/check.png"></a></td>
     		  </tr>';
@@ -144,15 +191,16 @@ $tienda = $_SESSION['tienda'];
 											    			<th>Igv</th>
 											    			<th>Total</th>
 											    			<th>Anulado</th>
+											    			<th>Nota Créd.</th>
 											    			<th>pdf</th>
 											    			<th></th>
 											    			<th></th>
-											    		</tr> 
-											    	</thead> 
+											    		</tr>
+											    	</thead>
 											    	<tfoot>
 								                         <tr>
 								                             <th colspan="8" style="text-align:right"></th>
-								                             <th colspan="5"></th>
+								                             <th colspan="6"></th>
 								                         </tr>
 								                    </tfoot>
 											    	<tbody> 

@@ -19,6 +19,7 @@ $facturan = 0;
 	$razonn = $comprobantes['nombre'];
 	$num_compro = $comprobantes['numero'];
 	$tipo_doc = $comprobantes['tipo_doc'];
+	$ya_anulado = $comprobantes['anulado'];
 	$num_compro = $comprobantes['numero'];
 
 	switch ($tipo_doc) {
@@ -133,8 +134,9 @@ $facturan = 0;
 									  		<h3>VENTA <?php echo $id; ?><br></h3>
 									  	</div>
 									  		<input type="hidden" name="fechita" name="fechita" value="<?php echo $fechita; ?>">
-									  		<input type="hidden" name="venta_id" name="venta_id" value="<?php echo $id; ?>">
+									  		<input type="hidden" name="venta_id" name="venta_id" value="<?php echo $ventan; ?>">
 									  		<input class="form-control" type="hidden" name="facturan" value="<?php echo $num_compro; ?>">
+											<input type="hidden" name="id_comprobante_origen" value="<?php echo $id; ?>">
 									  	<div class="table-responsive">
 									  		<table class="table">
 										    	<thead>
@@ -169,10 +171,14 @@ $facturan = 0;
 									    	<!-- <button type="submit" class="btn btn-success btn-lg">Facturar</button> -->
 									    </div>
 									    
+									    <?php if ($ya_anulado == '1') { ?>
+									    <div class="alert alert-danger text-center">Este comprobante ya fue anulado (baja o nota de cr&eacute;dito). No se puede generar otra nota de cr&eacute;dito.</div>
+									    <?php } else { ?>
 									    <div class="text-center">
-									    	<button type="button" data-loading-text="Facturando..." id="facturar" class="btn btn-success btn-lg">Generar Nota de crédito</button>
+									    	<button type="button" data-loading-text="Facturando..." id="facturar" class="btn btn-success btn-lg">Generar Nota de cr&eacute;dito</button>
 									    	<div class="loader text-center" id="loading"></div>
 									    </div>
+									    <?php } ?>
 									  </div>
 								</div>
 							</div>

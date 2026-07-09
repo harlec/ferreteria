@@ -154,9 +154,16 @@ $display_start = max(0, (ceil(($count_v + $count_p) / $page_length) - 1) * $page
 				{ title: "Fecha" },
 				{ title: "Monto" },
 				{ title: "Comprobante",  orderable: false, searchable: false },
+				{ title: "Nota Créd.",   orderable: false, searchable: false },
 				{ title: "Cliente" },
-				{ title: "Opciones",     orderable: false, searchable: false }
-			]
+				{ title: "Opciones",     orderable: false, searchable: false },
+				{ title: "",             visible: false, searchable: false, orderable: false }
+			],
+			createdRow: function(row, data, dataIndex) {
+				if (data[10] == '1') {
+					$(row).addClass('anulado');
+				}
+			}
 		});
 
 		$('body').on('click', '.btn-borrar', function() {

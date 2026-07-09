@@ -20,6 +20,7 @@ $facturan = 0;
 	$rucn = $comprobantes['doc'];
 	$razonn = $comprobantes['nombre'];
 	$num_compro = $comprobantes['numero'];
+	$ya_anulado = $comprobantes['anulado'];
 
 	//obtenemos fecha de la venta
 	$venta = Sdba::table('ventas'); // creating table object
@@ -146,8 +147,9 @@ $facturan = 0;
 												  	
 												  		<input type="hidden" name="fechita" name="fechita" value="<?php echo $fechita; ?>">
 												  		<input type="hidden" name="forma" name="forma" value="<?php echo $forma_pl; ?>">
-												  		<input type="hidden" name="venta_id" name="venta_id" value="<?php echo $id; ?>">
+												  		<input type="hidden" name="venta_id" name="venta_id" value="<?php echo $ventan; ?>">
 												  		<input class="form-control" type="hidden" name="facturan" value="<?php echo $num_compro; ?>">
+											<input type="hidden" name="id_comprobante_origen" value="<?php echo $id; ?>">
 												  			  	
 													<br>
 												  	<div class="table-responsive">
@@ -178,10 +180,14 @@ $facturan = 0;
 												    	<!-- <button type="submit" class="btn btn-success btn-lg">Facturar</button> -->
 												    </div>
 												    
+												    <?php if ($ya_anulado == '1') { ?>
+												    <div class="alert alert-danger text-center">Este comprobante ya fue anulado (baja o nota de cr&eacute;dito). No se puede generar otra nota de cr&eacute;dito.</div>
+												    <?php } else { ?>
 												    <div class="text-center">
-												    	<button type="button" data-loading-text="Facturando..." id="facturar" class="btn btn-success btn-lg">Generar Nota de crédito</button>
+												    	<button type="button" data-loading-text="Facturando..." id="facturar" class="btn btn-success btn-lg">Generar Nota de cr&eacute;dito</button>
 												    	<div class="loader text-center" id="loading"></div>
 												    </div>
+												    <?php } ?>
 												  </div>
 											</div>
 										</div>

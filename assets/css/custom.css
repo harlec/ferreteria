@@ -166,10 +166,11 @@ input[type=date]{
 }
 tr.anulado{
 	text-decoration: line-through;
-	color: #ff9a34;
+	color: #d9534f;
 }
 tr.anulado-pendiente{
 	text-decoration: line-through;
+	color: #ff9a34;
 }
 table.dataTable tbody th, table.dataTable tbody td{
 	padding: 5px 10px !important;

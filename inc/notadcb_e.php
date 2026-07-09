@@ -11,6 +11,7 @@ if ($_POST['placa']) {
 }
 
 $numero_compro = $_POST['numero_compro'];
+$id_comprobante_origen = isset($_POST['id_comprobante_origen']) ? intval($_POST['id_comprobante_origen']) : 0;
 
 $fechita = $_POST['fechita'];
 $tipo_doc = $_POST['tipo_doc'];
@@ -187,6 +188,13 @@ if (isset($leer_respuesta['errors'])) {
 	$configuracion = Sdba::table('comprobantes');
     $data = array('id_comprobante'=>'','serie'=>'BC03','numero'=>$leer_respuesta['numero'],'url'=>$leer_respuesta['enlace'],'tipo'=>'NB','venta'=>$venta_id,'tipo_doc'=>$tipo_doc,'doc'=>$ruc,'nombre'=>$r_social,'moneda'=>'PEN','tipo_cambio'=>'','grabada'=>$totalg,'igv'=>$totaligv,'total'=>$total,'fecha'=>$fecha,'state'=>'0');
     $configuracion->insert($data);
+    $nota_credito_id = $configuracion->insert_id();
+
+    if ($id_comprobante_origen) {
+        $comprobante_origen = Sdba::table('comprobantes');
+        $comprobante_origen->where('id_comprobante', $id_comprobante_origen);
+        $comprobante_origen->update(array('anulado'=>'1', 'nota_credito_id'=>$nota_credito_id));
+    }
 
     $venta = Sdba::table('ventas');
     $venta->where('id_venta', $venta_id);

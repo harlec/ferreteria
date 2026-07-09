@@ -89,7 +89,7 @@ if (isset($leer_respuesta['errors'])) {
         $fecha1 = date("Y-m-d");
     	$configuracion = Sdba::table('comprobantes');
         $configuracion->where('id_comprobante', $id);
-        $dataf = array('state'=>'2');
+        $dataf = array('state'=>'2', 'anulado'=>'1');
         $configuracion->update($dataf);
 
         //guardamos en tabla detalle de compra
