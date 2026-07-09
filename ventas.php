@@ -93,8 +93,10 @@ $display_start = max(0, (ceil(($count_v + $count_p) / $page_length) - 1) * $page
 											    			<th>Fecha</th>
 											    			<th>Monto</th>
 											    			<th>Comprobante</th>
+											    			<th>Nota Créd.</th>
 											    			<th>Cliente</th>
 											    			<th>Opciones</th>
+											    			<th></th>
 											    		</tr>
 											    	</thead>
 											    	<tbody></tbody>
