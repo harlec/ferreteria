@@ -75,7 +75,7 @@ $totaligv = $total_gravada - $totalg;
 // RUTA para enviar documentos
 //$ruta = "https://api.nubefact.com/api/v1/c4718034-54de-4e07-a9d7-52794d607dcc";
 
-$ruta = "https://www.pse.pe/api/v1/48a600f7000a40b0adb189d78fc14187706fae317b1e4465b0560dc04aa0783c";
+$ruta = "https://api.pse.pe/api/v1/48a600f7000a40b0adb189d78fc14187706fae317b1e4465b0560dc04aa0783c";
 
 //TOKEN para enviar documentos
 //$token = "84e0dde914dc4d96adeedfb73562b144268ef8f883a0444a80ef582cd06a2dfa";
